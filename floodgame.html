@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crisis Countdown - Flood Survival</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            background-color: #0c1427; /* Dark blue night color */
+        }
+
+        .rain-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .rain-drop {
+            position: absolute;
+            bottom: 100%;
+            width: 2px;
+            height: 80px;
+            background: linear-gradient(to top, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.4));
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh);
+            }
+        }
+        
+        #water-level {
+            transition: height 0.5s linear;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    
+    <!-- Animated Rain Background -->
+    <div class="rain-container" id="rain-container"></div>
+    
+    <!-- Game Container -->
+    <div id="game-container" class="relative w-full max-w-lg mx-auto bg-gray-800/50 backdrop-blur-md rounded-2xl shadow-2xl text-white p-6 z-10 overflow-hidden">
+        
+        <!-- Rising Water Timer -->
+        <div id="water-level" class="absolute bottom-0 left-0 w-full bg-blue-600/70" style="height: 0%;"></div>
+
+        <!-- Game Content -->
+        <div id="game-content" class="relative z-10">
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-4 border-b border-white/20 pb-3">
+                <div>
+                    <h1 class="text-2xl font-bold">Crisis Countdown</h1>
+                    <p class="text-blue-200">Flood Edition</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm">Score</p>
+                    <p id="score" class="text-2xl font-bold">0</p>
+                </div>
+            </div>
+
+            <!-- Question Area -->
+            <div id="question-area" class="my-6">
+                <p id="question-text" class="text-xl font-semibold min-h-[84px]"></p>
+            </div>
+
+            <!-- Answer Options -->
+            <div id="options-area" class="grid grid-cols-1 gap-4">
+                <!-- Options will be dynamically inserted here -->
+            </div>
+            
+            <!-- Feedback Overlay -->
+            <div id="feedback-overlay" class="absolute inset-0 bg-gray-900/80 flex items-center justify-center hidden rounded-2xl">
+                <p id="feedback-text" class="text-3xl font-bold"></p>
+            </div>
+        </div>
+        
+        <!-- Game Over Screen -->
+        <div id="game-over-screen" class="relative z-10 text-center hidden">
+            <h2 id="game-over-title" class="text-4xl font-black mb-2">GAME OVER</h2>
+            <p id="game-over-message" class="text-lg text-blue-200 mb-4">You were overwhelmed by the flood!</p>
+            <p class="mb-6">Final Score: <span id="final-score" class="text-3xl font-bold">0</span></p>
+            <div class="flex flex-col space-y-3">
+                <button id="restart-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105">Play Again</button>
+                <a href="index.html" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition">Back to Menu</a>
+            </div>
+        </div>
+        
+        <!-- Start Screen -->
+        <div id="start-screen" class="relative z-10 text-center">
+            <div class="w-20 h-20 mx-auto mb-4 text-blue-300">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-full h-full">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+            </div>
+            <h2 class="text-3xl font-bold mb-2">Flood Warning!</h2>
+            <p class="text-lg text-blue-200 mb-6">Heavy rains are causing water levels to rise rapidly. Make the right choices to stay safe. The water is rising... don't let it reach you!</p>
+            <button id="start-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full transition-transform transform hover:scale-105 w-full">Start Evacuation Plan</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Game Elements
+            const gameContainer = document.getElementById('game-container');
+            const gameContent = document.getElementById('game-content');
+            const startScreen = document.getElementById('start-screen');
+            const gameOverScreen = document.getElementById('game-over-screen');
+            const questionArea = document.getElementById('question-area');
+            const questionText = document.getElementById('question-text');
+            const optionsArea = document.getElementById('options-area');
+            const scoreDisplay = document.getElementById('score');
+            const finalScoreDisplay = document.getElementById('final-score');
+            const waterLevel = document.getElementById('water-level');
+            const feedbackOverlay = document.getElementById('feedback-overlay');
+            const feedbackText = document.getElementById('feedback-text');
+            
+            // Buttons
+            const startButton = document.getElementById('start-button');
+            const restartButton = document.getElementById('restart-button');
+
+            // Game State
+            let score = 0;
+            let currentQuestionIndex = 0;
+            let waterPercentage = 0;
+            let timerInterval;
+            const TIME_LIMIT = 15000; // 15 seconds per question
+            const WATER_RISE_PER_TICK = 100 / (TIME_LIMIT / 100); // Rise per 100ms
+            
+            const floodQuestions = [
+                {
+                    question: "You hear a flood warning on the radio. What is your first priority?",
+                    options: ["Check your social media", "Move to higher ground immediately", "Start packing your photo albums"],
+                    answer: 1
+                },
+                {
+                    question: "A path is covered by fast-moving water. How should you cross?",
+                    options: ["Wade through if it's below your knees", "Use a sturdy stick to check depth", "Do not cross; turn around"],
+                    answer: 2
+                },
+                {
+                    question: "If you have time before evacuating, what utility should you turn off first?",
+                    options: ["The main electricity switch", "The water valve", "The gas line"],
+                    answer: 0
+                },
+                {
+                    question: "Your car is caught in rising water. What is the safest action?",
+                    options: ["Stay in the car and call for help", "Climb on the roof of the car", "Abandon the car and move to higher ground"],
+                    answer: 2
+                },
+                {
+                    question: "Which of these is the safest source of drinking water after a flood?",
+                    options: ["Tap water", "Boiled water", "Rainwater collected in a bucket"],
+                    answer: 1
+                },
+                {
+                    question: "You see a downed power line in the water ahead. What should you do?",
+                    options: ["Jump over it", "Report it and stay far away", "Try to move it with a wooden stick"],
+                    answer: 1
+                },
+                {
+                    question: "To get official updates during the flood, what is the most reliable device?",
+                    options: ["Your smartphone", "A battery-powered radio", "Your smart TV"],
+                    answer: 1
+                },
+                {
+                    question: "If authorities issue an evacuation order, you should:",
+                    options: ["Wait to see if things get worse", "Leave immediately", "Finish packing all your belongings first"],
+                    answer: 1
+                }
+            ];
+
+            function startGame() {
+                score = 0;
+                currentQuestionIndex = 0;
+                waterPercentage = 0;
+                scoreDisplay.textContent = score;
+                waterLevel.style.height = '0%';
+                
+                startScreen.classList.add('hidden');
+                gameOverScreen.classList.add('hidden');
+                gameContent.classList.remove('hidden');
+
+                shuffleArray(floodQuestions);
+                displayNextQuestion();
+            }
+            
+            function displayNextQuestion() {
+                if (currentQuestionIndex >= floodQuestions.length) {
+                    winGame();
+                    return;
+                }
+
+                resetTimer();
+                const question = floodQuestions[currentQuestionIndex];
+                questionText.textContent = question.question;
+                optionsArea.innerHTML = '';
+                
+                question.options.forEach((option, index) => {
+                    const button = document.createElement('button');
+                    button.textContent = option;
+                    button.className = 'w-full p-4 bg-white/10 hover:bg-white/20 rounded-lg text-left transition';
+                    button.onclick = () => selectAnswer(index);
+                    optionsArea.appendChild(button);
+                });
+                
+                startTimer();
+            }
+
+            function selectAnswer(selectedIndex) {
+                clearInterval(timerInterval);
+                const correct = selectedIndex === floodQuestions[currentQuestionIndex].answer;
+                
+                if (correct) {
+                    score += 10;
+                    scoreDisplay.textContent = score;
+                    waterPercentage = Math.max(0, waterPercentage - 20); // Water recedes
+                    waterLevel.style.height = waterPercentage + '%';
+                    showFeedback(true);
+                } else {
+                    waterPercentage = Math.min(100, waterPercentage + 25); // Water rises faster
+                    waterLevel.style.height = waterPercentage + '%';
+                    showFeedback(false);
+                }
+
+                currentQuestionIndex++;
+                
+                setTimeout(() => {
+                    feedbackOverlay.classList.add('hidden');
+                    if (waterPercentage < 100) {
+                       displayNextQuestion();
+                    } else {
+                       endGame();
+                    }
+                }, 1500);
+            }
+            
+            function showFeedback(isCorrect) {
+                feedbackText.textContent = isCorrect ? 'CORRECT!' : 'WRONG!';
+                feedbackOverlay.className = `absolute inset-0 flex items-center justify-center rounded-2xl ${isCorrect ? 'bg-green-500/80' : 'bg-red-500/80'}`;
+                feedbackOverlay.classList.remove('hidden');
+            }
+            
+            function startTimer() {
+                timerInterval = setInterval(() => {
+                    waterPercentage += WATER_RISE_PER_TICK;
+                    waterLevel.style.height = waterPercentage + '%';
+
+                    if (waterPercentage >= 100) {
+                        endGame();
+                    }
+                }, 100);
+            }
+
+            function resetTimer() {
+                clearInterval(timerInterval);
+            }
+
+            function endGame() {
+                clearInterval(timerInterval);
+                gameContent.classList.add('hidden');
+                gameOverScreen.classList.remove('hidden');
+                document.getElementById('game-over-title').textContent = "GAME OVER";
+                document.getElementById('game-over-message').textContent = "The water rose too high!";
+                finalScoreDisplay.textContent = score;
+            }
+            
+            function winGame() {
+                clearInterval(timerInterval);
+                gameContent.classList.add('hidden');
+                gameOverScreen.classList.remove('hidden');
+                document.getElementById('game-over-title').textContent = "YOU SURVIVED!";
+                document.getElementById('game-over-message').textContent = "Great job! You made all the right choices.";
+                finalScoreDisplay.textContent = score;
+            }
+
+            // Utility to shuffle questions
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+            }
+            
+            // Generate animated rain
+            const rainContainer = document.getElementById('rain-container');
+            for (let i = 0; i < 100; i++) {
+                const drop = document.createElement('div');
+                drop.className = 'rain-drop';
+                drop.style.left = Math.random() * 100 + '%';
+                drop.style.animationDuration = 0.5 + Math.random() * 0.5 + 's';
+                drop.style.animationDelay = Math.random() * 5 + 's';
+                rainContainer.appendChild(drop);
+            }
+
+            // Event Listeners
+            startButton.addEventListener('click', startGame);
+            restartButton.addEventListener('click', startGame);
+        });
+    </script>
+</body>
+</html>

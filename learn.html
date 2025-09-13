@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disaster Preparedness Arcade - Technical Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .card-container {
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .transition-all {
+            transition: all 0.3s ease-in-out;
+        }
+        .option-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-color: #38bdf8; /* light blue */
+        }
+        .option-btn.selected {
+            background-color: #3b82f6; /* blue-500 */
+            color: white;
+            border-color: #3b82f6;
+        }
+        .option-btn.correct {
+            background-color: #22c55e; /* green-500 */
+            color: white;
+            border-color: #22c55e;
+            animation: pulse-correct 0.5s;
+        }
+        .option-btn.incorrect {
+            background-color: #ef4444; /* red-500 */
+            color: white;
+            border-color: #ef4444;
+            animation: shake-incorrect 0.5s;
+        }
+
+        @keyframes pulse-correct {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes shake-incorrect {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-white flex items-center justify-center min-h-screen p-4 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a]">
+
+    <div id="app-container" class="w-full max-w-4xl mx-auto">
+
+        <!-- Start Screen -->
+        <div id="start-screen-wrapper" class="p-1 bg-gradient-to-br from-blue-500 to-emerald-500 rounded-3xl shadow-2xl fade-in">
+            <div id="start-screen" class="text-center p-8 bg-slate-800 rounded-2xl">
+                <h1 class="text-4xl md:text-5xl font-extrabold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">Technical Preparedness Quiz</h1>
+                <p class="text-slate-400 mb-8 text-lg">Analyze the case studies and answer questions based on the technical data provided.</p>
+                <button id="start-btn" class="w-full md:w-auto bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white font-bold py-3 px-10 rounded-lg text-lg transition-all shadow-lg hover:shadow-xl transform hover:scale-105">
+                    Begin Analysis
+                </button>
+            </div>
+        </div>
+
+
+        <!-- Quiz Container (Info + Questions) -->
+        <div id="quiz-container" class="hidden">
+            <!-- Info Card -->
+            <div id="info-card-wrapper" class="p-1 bg-gradient-to-br from-blue-500 to-emerald-500 rounded-3xl shadow-2xl fade-in">
+                <div id="info-card-container" class="bg-slate-800 rounded-2xl p-6 md:p-8">
+                    <div class="flex items-center mb-6">
+                        <div class="p-3 bg-slate-700/50 rounded-xl mr-4">
+                            <i id="info-icon" class="text-4xl text-blue-400"></i>
+                        </div>
+                        <h2 id="info-title" class="text-3xl font-bold"></h2>
+                    </div>
+                    <div id="info-content" class="space-y-4 text-slate-300 text-base">
+                    </div>
+                    <button id="start-quiz-btn" class="mt-8 w-full bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-bold py-3 px-6 rounded-lg text-lg transition-all transform hover:scale-105">
+                        Proceed to Questions
+                    </button>
+                </div>
+            </div>
+
+            <!-- Question Area -->
+            <div id="question-wrapper" class="hidden p-1 bg-gradient-to-br from-blue-500 to-emerald-500 rounded-3xl shadow-2xl fade-in">
+                <div id="question-container" class="bg-slate-800 rounded-2xl p-6 md:p-8">
+                    <div class="mb-6">
+                        <p class="text-sm text-blue-400 font-semibold" id="question-counter"></p>
+                        <h3 class="text-xl md:text-2xl font-semibold mt-1" id="question-text"></h3>
+                    </div>
+                    <div id="options-container" class="grid grid-cols-1 gap-4">
+                        <!-- Options will be injected here -->
+                    </div>
+                    <button id="submit-btn" class="mt-8 w-full bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white font-bold py-3 px-6 rounded-lg text-lg transition-all disabled:bg-slate-600 disabled:cursor-not-allowed disabled:from-slate-600 disabled:to-slate-700 transform hover:scale-105">
+                        Submit Answer
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="results-screen-wrapper" class="hidden p-1 bg-gradient-to-br from-blue-500 to-emerald-500 rounded-3xl shadow-2xl fade-in">
+            <div id="results-screen" class="text-center p-8 bg-slate-800 rounded-2xl">
+                <i class="fas fa-trophy text-7xl text-yellow-400 mb-6 animate-pulse"></i>
+                <h2 class="text-4xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">Analysis Complete!</h2>
+                <p class="text-2xl text-slate-300 mb-2">Your Score for this topic:</p>
+                <p id="score-text" class="text-6xl font-bold mb-8"></p>
+                <div class="flex flex-col md:flex-row gap-4 justify-center">
+                    <button id="next-topic-btn" class="w-full md:w-auto bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-bold py-3 px-8 rounded-lg text-lg transition-all transform hover:scale-105">
+                        Next Case Study
+                    </button>
+                    <button id="finish-btn" class="w-full md:w-auto bg-slate-600 hover:bg-slate-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition-all transform hover:scale-105">
+                        Finish
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const topics = [
+            {
+                title: 'Earthquake Analysis',
+                icon: 'fas fa-chart-line',
+                info: `
+                    <p><strong>Case Study:</strong> An earthquake's energy is measured on the Richter scale, which is logarithmic. A Magnitude 6 event has a shaking amplitude 10 times greater than a Magnitude 5. Earthquakes release energy as seismic waves. The first to arrive are <strong>P-waves (Primary waves)</strong>, which are compressional and cause a jolt. They are followed by the slower, more destructive <strong>S-waves (Secondary waves)</strong>, which move the ground from side to side and cause the most violent shaking.</p>
+                    <p class="mt-3">The "Drop, Cover, and Hold On" technique is a direct response to the arrival of S-waves, minimizing injury from falling debris during the most intense ground motion.</p>
+                `,
+                questions: [
+                    { q: "Based on the logarithmic nature of the Richter scale, how much greater is the shaking amplitude of a Magnitude 7 earthquake compared to a Magnitude 5?", o: ["2 times greater", "20 times greater", "100 times greater", "1000 times greater"], a: "100 times greater" },
+                    { q: "Which type of seismic wave is characterized by its arrival after the initial jolt and is responsible for the most violent ground motion?", o: ["P-waves", "S-waves", "Surface waves", "Logarithmic waves"], a: "S-waves" },
+                    { q: "The 'Drop, Cover, and Hold On' protocol is primarily designed to protect individuals from the effects of which specific phenomenon?", o: ["The initial P-wave jolt", "The destructive S-waves", "The sound of the earthquake", "Aftershocks only"], a: "The destructive S-waves" }
+                ]
+            },
+            {
+                title: 'Flood Dynamics',
+                icon: 'fas fa-water',
+                info: `
+                    <p><strong>Case Study:</strong> Floods are categorized by their onset. <strong>River Floods</strong> develop slowly, whereas <strong>Flash Floods</strong> occur within minutes or hours of excessive rainfall, providing little warning. The force of moving water is often underestimated. Water moving at a velocity of 10 km/h exerts the same pressure as wind blowing at 110 km/h.</p>
+                    <p class="mt-3">Vehicle safety is critical; a depth of just <strong>60 cm (approx. 2 feet)</strong> of moving water is sufficient to float most standard passenger vehicles and SUVs, leading to a loss of control and a high risk of being swept away.</p>
+                `,
+                questions: [
+                    { q: "A flood occurring with minimal warning just hours after a period of intense rainfall is classified as what type?", o: ["River Flood", "Coastal Flood", "Gradual Flood", "Flash Flood"], a: "Flash Flood" },
+                    { q: "According to the study, water moving at 10 km/h exerts a pressure equivalent to wind at what speed?", o: ["50 km/h", "80 km/h", "110 km/h", "150 km/h"], a: "110 km/h" },
+                    { q: "What is the minimum depth of moving water cited in the text that can float most standard vehicles?", o: ["30 cm", "60 cm", "90 cm", "120 cm"], a: "60 cm" }
+                ]
+            },
+            {
+                title: 'Cyclone Structure',
+                icon: 'fas fa-hurricane',
+                info: `
+                    <p><strong>Case Study:</strong> Cyclones are categorized using the Saffir-Simpson Hurricane Wind Scale. A <strong>Category 3</strong> storm is defined by sustained wind speeds of <strong>178-208 km/h</strong> and is capable of causing "devastating damage."</p>
+                    <p class="mt-3">While wind is a major threat, the most deadly element is often the <strong>storm surge</strong>. This is an abnormal rise of sea water generated by the storm's low central pressure and powerful winds, which can inundate coastal areas several kilometers inland, causing widespread destruction far beyond the immediate coastline.</p>
+                `,
+                questions: [
+                    { q: "A cyclone with sustained winds measured at 195 km/h would be classified as which category on the Saffir-Simpson scale?", o: ["Category 2", "Category 3", "Category 4", "Category 5"], a: "Category 3" },
+                    { q: "What is the technical term for the abnormal rise in sea level caused by a cyclone's low pressure and strong winds?", o: ["Tidal Wave", "Tsunami", "Storm Surge", "Inundation Wave"], a: "Storm Surge" },
+                    { q: "According to the provided data, what is the lower-bound wind speed for a Category 3 cyclone?", o: ["150 km/h", "178 km/h", "209 km/h", "252 km/h"], a: "178 km/h" }
+                ]
+            },
+            {
+                title: 'Landslide Geotechnics',
+                icon: 'fas fa-mountain',
+                info: `
+                    <p><strong>Case Study:</strong> Slope stability is governed by a principle called the <strong>Angle of Repose</strong>, which is the steepest angle (typically 30-35 degrees) that loose material can maintain without sliding. Triggers such as intense rainfall or seismic activity can oversaturate soil, increasing its weight and pore water pressure, which reduces internal friction.</p>
+                    <p class="mt-3">This reduction in friction can cause the slope to fail. A key geological warning sign of potential failure is the appearance of <strong>tension cracks</strong> or scarps at the top of a slope, indicating the land mass is beginning to pull away.</p>
+                `,
+                questions: [
+                    { q: "What is the technical term for the steepest angle at which a slope of loose material can remain stable?", o: ["Angle of Friction", "Angle of Incidence", "Angle of Repose", "Slope Threshold"], a: "Angle of Repose" },
+                    { q: "How does intense rainfall primarily contribute to slope failure, according to the text?", o: ["It erodes the topsoil", "It washes away vegetation", "It reduces internal friction", "It makes the ground slippery"], a: "It reduces internal friction" },
+                    { q: "Which geological feature is identified as a critical warning sign at the top of an unstable slope?", o: ["Exposed bedrock", "Animal burrows", "Tension cracks", "Water springs"], a: "Tension cracks" }
+                ]
+            },
+            {
+                title: 'Wildfire Science',
+                icon: 'fas fa-fire-alt',
+                info: `
+                    <p><strong>Case Study:</strong> Combustion is based on the <strong>Fire Triangle</strong>, which requires three components to sustain a fire: Fuel, Oxygen, and Heat. The removal of any one of these components will extinguish the fire. In a wildfire, a significant method of propagation is <strong>radiant heat</strong>, which travels through the air and can pre-heat and ignite new fuel sources without direct flame contact.</p>
+                    <p class="mt-3">To protect homes, creating a "defensible space" of at least 30 feet is recommended. This strategy works by removing the <strong>Fuel</strong> component from the Fire Triangle, thereby reducing the likelihood of ignition by radiant heat.</p>
+                `,
+                questions: [
+                    { q: "What are the three essential components of the 'Fire Triangle' as described in the study?", o: ["Fuel, Oxygen, and Heat", "Wood, Air, and Spark", "Fuel, Wind, and Dryness", "Heat, Carbon, and Oxygen"], a: "Fuel, Oxygen, and Heat" },
+                    { q: "What is the primary mechanism that allows a wildfire to ignite new fuel sources from a distance, without direct flame contact?", o: ["Convection", "Conduction", "Radiant heat", "Spontaneous combustion"], a: "Radiant heat" },
+                    { q: "Creating a 30-foot 'defensible space' around a home is a strategy designed to remove which specific component of the Fire Triangle?", o: ["Oxygen", "Heat", "The ignition source", "Fuel"], a: "Fuel" }
+                ]
+            }
+        ];
+
+        let currentTopicIndex = 0;
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let selectedAnswer = null;
+
+        const startScreen = document.getElementById('start-screen-wrapper');
+        const quizContainer = document.getElementById('quiz-container');
+        const infoCardContainer = document.getElementById('info-card-wrapper');
+        const questionContainer = document.getElementById('question-wrapper');
+        const resultsScreen = document.getElementById('results-screen-wrapper');
+        
+        const startBtn = document.getElementById('start-btn');
+        const startQuizBtn = document.getElementById('start-quiz-btn');
+        const submitBtn = document.getElementById('submit-btn');
+        const nextTopicBtn = document.getElementById('next-topic-btn');
+        const finishBtn = document.getElementById('finish-btn');
+        
+        const infoIcon = document.getElementById('info-icon');
+        const infoTitle = document.getElementById('info-title');
+        const infoContent = document.getElementById('info-content');
+        
+        const questionCounter = document.getElementById('question-counter');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        
+        const scoreText = document.getElementById('score-text');
+
+        startBtn.addEventListener('click', startGame);
+        startQuizBtn.addEventListener('click', startQuiz);
+        submitBtn.addEventListener('click', submitAnswer);
+        nextTopicBtn.addEventListener('click', nextTopic);
+        finishBtn.addEventListener('click', finishQuiz);
+
+        function startGame() {
+            startScreen.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+            loadTopic(currentTopicIndex);
+        }
+
+        function loadTopic(index) {
+            const topic = topics[index];
+            infoIcon.className = `${topic.icon} text-4xl text-blue-400`;
+            infoTitle.textContent = topic.title;
+            infoContent.innerHTML = topic.info;
+            
+            questionContainer.classList.add('hidden');
+            infoCardContainer.classList.remove('hidden');
+            infoCardContainer.classList.add('fade-in');
+            
+            score = 0;
+            currentQuestionIndex = 0;
+        }
+
+        function startQuiz() {
+            infoCardContainer.classList.add('hidden');
+            questionContainer.classList.remove('hidden');
+            questionContainer.classList.add('fade-in');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            selectedAnswer = null;
+            submitBtn.disabled = true;
+            
+            const questionData = topics[currentTopicIndex].questions[currentQuestionIndex];
+            questionCounter.textContent = `Question ${currentQuestionIndex + 1} of ${topics[currentTopicIndex].questions.length}`;
+            questionText.textContent = questionData.q;
+            optionsContainer.innerHTML = '';
+
+            questionData.o.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.className = 'option-btn w-full text-left p-4 bg-slate-700 rounded-lg border-2 border-slate-600 transition-all';
+                button.onclick = () => selectOption(button, option);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function selectOption(button, answer) {
+            document.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected'));
+            button.classList.add('selected');
+            selectedAnswer = answer;
+            submitBtn.disabled = false;
+        }
+
+        function submitAnswer() {
+            if (selectedAnswer === null) return;
+
+            const questionData = topics[currentTopicIndex].questions[currentQuestionIndex];
+            const isCorrect = selectedAnswer === questionData.a;
+            
+            if (isCorrect) {
+                score++;
+            }
+
+            document.querySelectorAll('.option-btn').forEach(btn => {
+                btn.disabled = true;
+                if (btn.textContent === questionData.a) {
+                    btn.classList.add('correct');
+                } else if (btn.classList.contains('selected')) {
+                    btn.classList.add('incorrect');
+                }
+            });
+
+            setTimeout(() => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < topics[currentTopicIndex].questions.length) {
+                    loadQuestion();
+                } else {
+                    showResults();
+                }
+            }, 1500);
+        }
+
+        function showResults() {
+            quizContainer.classList.add('hidden');
+            resultsScreen.classList.remove('hidden');
+            resultsScreen.classList.add('fade-in');
+            scoreText.textContent = `${score} / ${topics[currentTopicIndex].questions.length}`;
+
+            if (currentTopicIndex >= topics.length - 1) {
+                nextTopicBtn.classList.add('hidden');
+                finishBtn.textContent = "Start Over";
+            } else {
+                nextTopicBtn.classList.remove('hidden');
+                finishBtn.textContent = "Finish";
+            }
+        }
+
+        function nextTopic() {
+            currentTopicIndex++;
+            if (currentTopicIndex < topics.length) {
+                resultsScreen.classList.add('hidden');
+                quizContainer.classList.remove('hidden');
+                loadTopic(currentTopicIndex);
+            }
+        }
+
+        function finishQuiz() {
+            resultsScreen.classList.add('hidden');
+            quizContainer.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+            startScreen.classList.add('fade-in');
+            currentTopicIndex = 0;
+        }
+
+    </script>
+</body>
+</html>
+
+

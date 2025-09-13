@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Disaster Kit: Conveyor Rush</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <style>
+        :root {
+            --bg-color: #111827;
+            --primary-glow: rgba(59, 130, 246, 0.5);
+            --success-glow: rgba(34, 197, 94, 0.5);
+            --error-glow: rgba(239, 68, 68, 0.5);
+        }
+        
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            text-align: center; margin: 0; min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center;
+            background-color: var(--bg-color); color: #f3f4f6;
+            position: relative; overflow: hidden;
+        }
+
+        #background-interactive {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;
+            background-image: 
+                linear-gradient(rgba(17, 24, 39, 0) 50%, rgba(17, 24, 39, 1)),
+                radial-gradient(ellipse at center, rgba(17, 24, 39, 0.4) 0%, rgba(17, 24, 39, 1) 100%);
+        }
+        #background-interactive::before, #background-interactive::after {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(0deg, transparent 0%, var(--primary-glow) 2%, transparent 4%),
+                              linear-gradient(90deg, transparent 0%, var(--primary-glow) 1%, transparent 2%);
+            background-size: 100% 50px, 50px 100%; opacity: 0.1; animation: scan 20s linear infinite;
+        }
+        #background-interactive::after { animation: scan 20s linear infinite reverse; animation-delay: 10s; }
+        @keyframes scan { 0% { background-position: 0 0; } 100% { background-position: 0 -100vh; } }
+
+        header {
+            width: 100%; background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(10px);
+            padding: 15px 0; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            position: relative; z-index: 2; border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        header h1 {
+            color: #fff; text-shadow: 0 0 10px var(--primary-glow); margin: 0;
+            font-size: 1.8rem; font-weight: 900;
+        }
+
+        #game-info {
+            display: flex; justify-content: space-between; align-items-center;
+            width: 100%; max-width: 900px; padding: 15px; box-sizing: border-box;
+            position: relative; z-index: 2;
+        }
+        .info-box { font-weight: bold; font-size: 1.1rem; }
+        #timer-bar { width: 30%; background-color: rgba(255,255,255,0.2); height: 10px; border-radius: 5px; overflow: hidden; }
+        #timer-fill {
+            width: 100%; height: 100%; background-color: #3b82f6;
+            border-radius: 5px; transition: width 1s linear, background-color 0.5s ease;
+        }
+
+        /* --- CONVEYOR BELT --- */
+        #conveyor-wrapper {
+            width: 100%;
+            height: 150px;
+            margin: 20px 0;
+            background: rgba(0,0,0,0.3);
+            border-top: 2px solid rgba(255,255,255,0.1);
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+        }
+        #conveyor-belt {
+            width: 100%; height: 100%;
+            position: absolute;
+            background-image: repeating-linear-gradient(45deg, #374151, #374151 20px, #4b5563 20px, #4b5563 40px);
+            animation: move-belt 10s linear infinite;
+        }
+        @keyframes move-belt { 0% { background-position: 0 0; } 100% { background-position: -282px 0; } }
+
+        .item {
+            position: absolute;
+            top: 35px;
+            width: 80px; height: 80px;
+            background-color: rgba(30, 41, 59, 0.9);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #e5e7eb; padding: 5px; border-radius: 12px;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+            cursor: grab; font-weight: bold; user-select: none;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s;
+            animation: move-item 6s linear;
+        }
+        @keyframes move-item { 0% { left: 100%; } 100% { left: -100px; } }
+        .item .icon { font-size: 2rem; }
+        .item .name { font-size: 0.65rem; }
+        .item:hover { transform: scale(1.1); box-shadow: 0 0 20px var(--primary-glow); }
+        .item.dragging { opacity: 0.5; cursor: grabbing; animation-play-state: paused; }
+
+        /* --- GO-BAG DROP ZONE --- */
+        #go-bag-zone {
+            width: 800px; max-width: 90%; height: 250px;
+            margin: 20px auto;
+            background: rgba(17, 24, 39, 0.7) url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M54 30L30 6 6 30l12 12 12-12 12 12 12-12zM30 36l-6 6h12l-6-6z" fill="%23f9fafb" fill-opacity="0.05" fill-rule="evenodd"/%3E%3C/svg%3E');
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 2px dashed rgba(255,255,255,0.2);
+            display: flex; flex-direction: column; align-items: center;
+            padding: 15px; box-shadow: inset 0 5px 10px rgba(0,0,0,0.3);
+            position: relative; z-index: 1;
+            transition: all 0.3s;
+        }
+        #go-bag-zone.hover { border-color: #3b82f6; box-shadow: inset 0 0 30px var(--primary-glow); }
+        #go-bag-items {
+            display: flex; gap: 15px; flex-wrap: wrap; justify-content: center;
+        }
+        .packed-item {
+            width: 80px; height: 80px; background-color: #374151; border-radius: 10px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            animation: pop-in 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+        .packed-item.essential { border: 1px solid #22c55e; box-shadow: 0 0 10px var(--success-glow); }
+        .packed-item.non-essential { border: 1px solid #ef4444; box-shadow: 0 0 10px var(--error-glow); }
+        @keyframes pop-in { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        /* MODAL & BUTTONS */
+        #modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+            display: flex; align-items: center; justify-content: center; z-index: 10;
+        }
+        .modal-content {
+            background-color: #1f2937; padding: 30px; border-radius: 20px;
+            text-align: center; box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            max-width: 450px; width: 90%;
+            animation: fade-in-up 0.4s ease-out;
+        }
+        @keyframes fade-in-up { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        #modal-title { font-size: 2.5rem; font-weight: 900; margin-bottom: 1rem; }
+        #modal-text { font-size: 1.1rem; color: #d1d5db; margin-bottom: 1.5rem; }
+        #modal-button {
+            width: 100%; background-color: #2563eb; font-weight: bold; color: white;
+            padding: 12px; border: none; border-radius: 10px; cursor: pointer;
+            transition: all 0.3s;
+        }
+        #modal-button:hover { background-color: #1d4ed8; transform: scale(1.05); }
+
+        .confetti {
+            position: fixed; width: 10px; height: 10px; z-index: 9999;
+            pointer-events: none; animation: fall 3s linear forwards;
+        }
+        @keyframes fall { from { transform: translateY(-20vh) rotate(0deg); opacity: 1; } to { transform: translateY(120vh) rotate(720deg); opacity: 0; } }
+    </style>
+</head>
+<body>
+    <div id="background-interactive"></div>
+
+    <div id="game-container" class="w-full h-full flex flex-col hidden">
+        <header>
+            <h1>Disaster Kit: Conveyor Rush</h1>
+            <a href="crisis_menu.html" class="absolute top-4 right-4 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition">Back to Menu</a>
+        </header>
+        <div id="game-info">
+            <div class="info-box">Score: <span id="score">0</span></div>
+            <div id="timer-bar"><div id="timer-fill"></div></div>
+            <div class="info-box">Essential Items: <span id="packed-count">0</span> / 5</div>
+        </div>
+        <div id="conveyor-wrapper">
+            <div id="conveyor-belt"></div>
+            <!-- Items are spawned here -->
+        </div>
+        <div id="go-bag-zone">
+            <h2 class="text-xl font-bold mb-2">GO-BAG (DROP ITEMS HERE)</h2>
+            <div id="go-bag-items"></div>
+        </div>
+    </div>
+
+    <div id="modal" style="display: flex;">
+        <div class="modal-content">
+            <h2 id="modal-title">Conveyor Rush</h2>
+            <p id="modal-text">Essential supplies are coming down the conveyor belt. Drag 5 items into your Go-Bag. Choose wisely—only essential items count toward winning, and non-essential items deduct points!</p>
+            <button id="modal-button">Start Packing</button>
+        </div>
+    </div>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const el = {
+            gameContainer: document.getElementById('game-container'),
+            conveyorWrapper: document.getElementById('conveyor-wrapper'),
+            goBagZone: document.getElementById('go-bag-zone'),
+            goBagItems: document.getElementById('go-bag-items'),
+            score: document.getElementById('score'),
+            packedCount: document.getElementById('packed-count'),
+            timerFill: document.getElementById('timer-fill'),
+            modal: document.getElementById('modal'),
+            modalTitle: document.getElementById('modal-title'),
+            modalText: document.getElementById('modal-text'),
+            modalButton: document.getElementById('modal-button'),
+        };
+
+        const regionItems = {
+            North: [
+                { id: 'water', name: 'Water', essential: true, icon: '💧' },
+                { id: 'food', name: 'Canned Food', essential: true, icon: '🥫' },
+                { id: 'firstaid', name: 'First-Aid Kit', essential: true, icon: '🩹' },
+                { id: 'flashlight', name: 'Flashlight', essential: true, icon: '🔦' },
+                { id: 'blanket', name: 'Blanket', essential: true, icon: '🛌' },
+                { id: 'whistle', name: 'Whistle', essential: true, icon: '📢' },
+                { id: 'radio', name: 'Radio', essential: true, icon: '📻' },
+                { id: 'gaming', name: 'Video Game', essential: false, icon: '🎮' },
+                { id: 'books', name: 'Books', essential: false, icon: '📚' },
+                { id: 'jewelry', name: 'Jewelry', essential: false, icon: '💍' },
+            ],
+            East: [
+                { id: 'water', name: 'Water', essential: true, icon: '💧' },
+                { id: 'food', name: 'Canned Food', essential: true, icon: '🥫' },
+                { id: 'firstaid', name: 'First-Aid Kit', essential: true, icon: '🩹' },
+                { id: 'flashlight', name: 'Flashlight', essential: true, icon: '🔦' },
+                { id: 'waterpurifier', name: 'Water Purifier', essential: true, icon: '🚰' },
+                { id: 'radio', name: 'Radio', essential: true, icon: '📻' },
+                { id: 'multitool', name: 'Multi-tool', essential: true, icon: '🔪' },
+                { id: 'soda', name: 'Soda', essential: false, icon: '🥤' },
+                { id: 'toys', name: 'Toys', essential: false, icon: '🧸' },
+                { id: 'chips', name: 'Chips', essential: false, icon: '🥨' },
+            ],
+            South: [
+                { id: 'water', name: 'Water', essential: true, icon: '💧' },
+                { id: 'food', name: 'Canned Food', essential: true, icon: '🥫' },
+                { id: 'firstaid', name: 'First-Aid Kit', essential: true, icon: '🩹' },
+                { id: 'flashlight', name: 'Flashlight', essential: true, icon: '🔦' },
+                { id: 'lifevest', name: 'Life Vest', essential: true, icon: '🦺' },
+                { id: 'radio', name: 'Radio', essential: true, icon: '📻' },
+                { id: 'whistle', name: 'Whistle', essential: true, icon: '📢' },
+                { id: 'plant', name: 'Plant', essential: false, icon: '🪴' },
+                { id: 'shoes', name: 'Fancy Shoes', essential: false, icon: '👠' },
+                { id: 'jewelry', name: 'Jewelry', essential: false, icon: '💍' },
+            ],
+            West: [
+                { id: 'water', name: 'Water', essential: true, icon: '💧' },
+                { id: 'food', name: 'Canned Food', essential: true, icon: '🥫' },
+                { id: 'firstaid', name: 'First-Aid Kit', essential: true, icon: '🩹' },
+                { id: 'flashlight', name: 'Flashlight', essential: true, icon: '🔦' },
+                { id: 'dustmask', name: 'Dust Mask', essential: true, icon: '😷' },
+                { id: 'radio', name: 'Radio', essential: true, icon: '📻' },
+                { id: 'multitool', name: 'Multi-tool', essential: true, icon: '🔪' },
+                { id: 'gaming', name: 'Video Game', essential: false, icon: '🎮' },
+                { id: 'books', name: 'Books', essential: false, icon: '📚' },
+                { id: 'soda', name: 'Soda', essential: false, icon: '🥤' },
+            ],
+            Central: [
+                { id: 'water', name: 'Water', essential: true, icon: '💧' },
+                { id: 'food', name: 'Canned Food', essential: true, icon: '🥫' },
+                { id: 'firstaid', name: 'First-Aid Kit', essential: true, icon: '🩹' },
+                { id: 'flashlight', name: 'Flashlight', essential: true, icon: '🔦' },
+                { id: 'waterpurifier', name: 'Water Purifier', essential: true, icon: '🚰' },
+                { id: 'radio', name: 'Radio', essential: true, icon: '📻' },
+                { id: 'whistle', name: 'Whistle', essential: true, icon: '📢' },
+                { id: 'toys', name: 'Toys', essential: false, icon: '🧸' },
+                { id: 'chips', name: 'Chips', essential: false, icon: '🥨' },
+                { id: 'plant', name: 'Plant', essential: false, icon: '🪴' },
+            ],
+            National: [
+                { id: 'water', name: 'Water', essential: true, icon: '💧' },
+                { id: 'food', name: 'Canned Food', essential: true, icon: '🥫' },
+                { id: 'firstaid', name: 'First-Aid Kit', essential: true, icon: '🩹' },
+                { id: 'flashlight', name: 'Flashlight', essential: true, icon: '🔦' },
+                { id: 'radio', name: 'Radio', essential: true, icon: '📻' },
+                { id: 'multitool', name: 'Multi-tool', essential: true, icon: '🔪' },
+                { id: 'blanket', name: 'Blanket', essential: true, icon: '🛌' },
+                { id: 'whistle', name: 'Whistle', essential: true, icon: '📢' },
+                { id: 'gaming', name: 'Video Game', essential: false, icon: '🎮' },
+                { id: 'books', name: 'Books', essential: false, icon: '📚' },
+                { id: 'jewelry', name: 'Jewelry', essential: false, icon: '💍' },
+                { id: 'soda', name: 'Soda', essential: false, icon: '🥤' },
+                { id: 'toys', name: 'Toys', essential: false, icon: '🧸' },
+                { id: 'chips', name: 'Chips', essential: false, icon: '🥨' },
+                { id: 'plant', name: 'Plant', essential: false, icon: '🪴' },
+                { id: 'shoes', name: 'Fancy Shoes', essential: false, icon: '👠' },
+            ],
+        };
+
+        let score, packedItems, gameInterval, timerInterval, timeLeft;
+        let availableItems = [];
+        let synth, sounds;
+        const ITEM_LIMIT = 5;
+        const ESSENTIAL_ITEMS_GOAL = 5;
+
+        function setupSounds() {
+            try {
+                if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
+                    Tone.start().catch(err => console.warn('Tone.js failed to start:', err));
+                }
+                synth = new Tone.PolySynth(Tone.Synth).toDestination();
+                sounds = {
+                    drag: () => synth.triggerAttackRelease("C3", "16n", Tone.now()),
+                    dropSuccess: () => synth.triggerAttackRelease("G4", "16n", Tone.now()),
+                    dropFail: () => synth.triggerAttackRelease("C2", "16n", Tone.now()),
+                    win: () => { const now = Tone.now(); synth.triggerAttackRelease(["C4", "E4", "G4", "C5"], "8n", now); },
+                    lose: () => { const now = Tone.now(); synth.triggerAttackRelease(["C3", "D#3", "G3"], "4n", now); },
+                };
+            } catch (err) {
+                console.warn("Tone.js not loaded or failed to initialize. Sound effects disabled:", err);
+                sounds = { drag: () => {}, dropSuccess: () => {}, dropFail: () => {}, win: () => {}, lose: () => {} };
+            }
+        }
+
+        function initGame() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const region = urlParams.get('region') || 'National';
+            const allItems = regionItems[region] || regionItems.National;
+
+            score = 0; packedItems = []; timeLeft = 60;
+            el.score.textContent = score;
+            el.packedCount.textContent = 0;
+            el.goBagItems.innerHTML = '';
+            el.modal.style.display = 'none';
+            el.gameContainer.classList.remove('hidden');
+
+            const essential = shuffle(allItems.filter(i => i.essential));
+            const nonEssential = shuffle(allItems.filter(i => !i.essential));
+            availableItems = shuffle([...essential, ...nonEssential]);
+            
+            clearInterval(gameInterval);
+            clearInterval(timerInterval);
+            gameInterval = setInterval(spawnItem, 2500);
+            timerInterval = setInterval(updateTimer, 1000);
+            updateTimer();
+        }
+        
+        function spawnItem() {
+            if (availableItems.length === 0) return;
+            const itemData = availableItems.pop();
+            const itemEl = document.createElement('div');
+            itemEl.className = 'item';
+            itemEl.dataset.itemId = itemData.id;
+            itemEl.draggable = true;
+            itemEl.innerHTML = `<div class="icon">${itemData.icon}</div><div class="name">${itemData.name}</div>`;
+            el.conveyorWrapper.appendChild(itemEl);
+
+            itemEl.addEventListener('animationend', () => {
+                itemEl.remove();
+            });
+        }
+
+        function updateTimer() {
+            timeLeft--;
+            const percentage = (timeLeft / 60) * 100;
+            el.timerFill.style.width = `${percentage}%`;
+            if (timeLeft <= 10) el.timerFill.style.backgroundColor = '#dc2626';
+            else if (timeLeft <= 30) el.timerFill.style.backgroundColor = '#facc15';
+            else el.timerFill.style.backgroundColor = '#3b82f6';
+            
+            if (timeLeft <= 0) endGame(false);
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            el.goBagZone.classList.remove('hover');
+            const draggedEl = document.querySelector('.dragging');
+            if (!draggedEl) return;
+            
+            const itemId = draggedEl.dataset.itemId;
+            const urlParams = new URLSearchParams(window.location.search);
+            const region = urlParams.get('region') || 'National';
+            const allItems = regionItems[region] || regionItems.National;
+            const itemData = allItems.find(i => i.id === itemId);
+
+            if (packedItems.length >= ITEM_LIMIT) return; // Ignore drops after 5 items
+
+            if (itemData.essential) {
+                sounds.dropSuccess();
+                score += 10;
+            } else {
+                sounds.dropFail();
+                score -= 5;
+            }
+            packedItems.push(itemData);
+            
+            const packedItemEl = document.createElement('div');
+            packedItemEl.className = `packed-item ${itemData.essential ? 'essential' : 'non-essential'}`;
+            packedItemEl.innerHTML = `<div class="icon">${itemData.icon}</div>`;
+            el.goBagItems.appendChild(packedItemEl);
+            draggedEl.remove();
+
+            const essentialCount = packedItems.filter(i => i.essential).length;
+            el.score.textContent = score;
+            el.packedCount.textContent = essentialCount;
+
+            if (packedItems.length >= ITEM_LIMIT) endGame(essentialCount === ESSENTIAL_ITEMS_GOAL);
+        }
+
+        function endGame(isWin) {
+            clearInterval(gameInterval);
+            clearInterval(timerInterval);
+            el.gameContainer.classList.add('hidden');
+            el.modal.style.display = 'flex';
+
+            el.conveyorWrapper.querySelectorAll('.item').forEach(item => item.remove());
+
+            const essentialCount = packedItems.filter(i => i.essential).length;
+            const itemList = packedItems.length > 0 
+                ? packedItems.map(item => 
+                    `<div class="${item.essential ? 'text-green-500' : 'text-red-500'}">
+                        ${item.essential ? '✔' : '✘'} ${item.name} (${item.essential ? 'Essential' : 'Non-Essential'})
+                    </div>`
+                ).join('')
+                : 'No items packed.';
+
+            if (isWin) {
+                el.modalTitle.textContent = "Congratulations!";
+                el.modalText.innerHTML = `You packed 5 essential items! Your Go-Bag is ready.<br>Final Score: ${score}<br><br><strong>Packed Items:</strong><br>${itemList}`;
+                sounds.win();
+                launchConfetti();
+            } else {
+                el.modalTitle.textContent = packedItems.length < ITEM_LIMIT ? "Time's Up!" : "Incorrect Items!";
+                el.modalText.innerHTML = `You packed ${essentialCount} essential items. You need 5 essential items to win.<br>Final Score: ${score}<br><br><strong>Packed Items:</strong><br>${itemList}`;
+                sounds.lose();
+            }
+            el.modalButton.textContent = "Play Again";
+        }
+
+        function launchConfetti() {
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = `${Math.random()*100}vw`;
+                confetti.style.backgroundColor = `hsl(${Math.random()*360},100%,50%)`;
+                confetti.style.animationDelay = `${Math.random()*0.5}s`;
+                document.body.appendChild(confetti);
+                setTimeout(() => confetti.remove(), 3000);
+            }
+        }
+        
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) { 
+                const j = Math.floor(Math.random() * (i + 1)); 
+                [array[i], array[j]] = [array[j], array[i]]; 
+            }
+            return array;
+        }
+
+        el.modalButton.addEventListener('click', initGame);
+        
+        document.addEventListener('dragstart', e => {
+            if (e.target.classList.contains('item')) {
+                sounds.drag();
+                e.target.classList.add('dragging');
+            }
+        });
+        document.addEventListener('dragend', e => {
+            if (e.target.classList.contains('item')) {
+                e.target.classList.remove('dragging');
+            }
+        });
+        el.goBagZone.addEventListener('dragover', e => { 
+            e.preventDefault(); 
+            el.goBagZone.classList.add('hover'); 
+        });
+        el.goBagZone.addEventListener('dragleave', () => el.goBagZone.classList.remove('hover'));
+        el.goBagZone.addEventListener('drop', handleDrop);
+        
+        setupSounds();
+    });
+    </script>
+</body>
+</html>

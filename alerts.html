@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disaster Preparedness Arcade - Real-Time Alerts</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .alert-card {
+            transition: all 0.3s ease-in-out;
+        }
+        .alert-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+        /* Custom scrollbar */
+        #alerts-container::-webkit-scrollbar { width: 8px; }
+        #alerts-container::-webkit-scrollbar-track { background: #1e293b; }
+        #alerts-container::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        #alerts-container::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+        /* HEADER & FOOTER STYLES (DARK THEME) */
+        .site-header {
+            background-color: #1e293b; /* slate-800 */
+            padding: 15px 20px;
+            border-bottom: 1px solid #334155; /* slate-700 */
+        }
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .logo-link {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: #f1f5f9; /* slate-100 */
+        }
+        .logo-image {
+            height: 60px;
+            margin-right: 15px;
+        }
+        .site-name {
+            font-size: 1.75em;
+            font-weight: 700; /* bold */
+        }
+        .profile-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #3b82f6; /* blue-500 */
+            color: white;
+            text-decoration: none;
+            border-radius: 8px; /* more rounded */
+            font-weight: 600; /* semibold */
+            transition: background-color 0.3s ease;
+        }
+        .profile-button:hover {
+            background-color: #2563eb; /* blue-600 */
+        }
+        .site-footer {
+            background-color: #0f172a; /* slate-900 */
+            color: #94a3b8; /* slate-400 */
+            text-align: center;
+            padding: 25px 0;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen">
+
+    <header class="site-header">
+        <div class="header-container">
+            <a href="index.html" class="logo-link">
+                <img src="logo.png" alt="ResQHub Logo" class="logo-image">
+                <span class="site-name">ResQHub</span>
+            </a>
+            <a href="profile.html" class="profile-button">Profile</a>
+        </div>
+    </header>
+
+    <div id="app-container" class="w-full max-w-4xl mx-auto p-4">
+        <div class="p-1 bg-gradient-to-br from-blue-500 to-red-500 rounded-3xl shadow-2xl fade-in">
+            <div class="bg-slate-800 rounded-2xl p-6 md:p-8 flex flex-col h-[85vh] max-h-[900px]">
+                <div class="text-center mb-4">
+                    <i class="fas fa-satellite-dish text-5xl text-blue-400 mb-3"></i>
+                    <h1 class="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-red-400">Real-Time Alerts</h1>
+                    <p class="text-slate-400 mt-2 text-lg">Live updates and advisories from national and regional authorities.</p>
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-4 mb-4">
+                    <div class="flex-grow">
+                        <label for="region-select" class="block mb-2 text-sm font-medium text-slate-300">Filter by Region:</label>
+                        <select id="region-select" class="bg-slate-700 border border-slate-600 text-white text-md rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                            <option selected value="national">National (All India)</option>
+                            <option value="odisha">Odisha</option>
+                            <option value="uttarakhand">Uttarakhand</option>
+                            <option value="kerala">Kerala</option>
+                            <option value="gujarat">Gujarat</option>
+                            <option value="bihar">Bihar</option>
+                        </select>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <label for="notification-toggle" class="block mb-2 text-sm font-medium text-slate-300">Push Notifications:</label>
+                        <button id="notification-toggle" class="w-full flex items-center justify-center gap-2 p-2.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg transition-colors">
+                            <i id="bell-icon" class="fas fa-bell-slash text-slate-400"></i>
+                            <span id="bell-text">Enable</span>
+                        </button>
+                    </div>
+                </div>
+                <p id="notification-status" class="text-center text-sm text-emerald-400 h-5 mb-2"></p>
+
+                <div id="alerts-container" class="flex-grow space-y-4 overflow-y-auto pr-2">
+                    </div>
+                <div id="placeholder" class="hidden text-center flex-grow flex flex-col items-center justify-center py-10 px-6 bg-slate-700/50 rounded-xl">
+                    <i class="fas fa-check-circle text-4xl text-emerald-500 mb-3"></i>
+                    <p class="text-slate-300 font-semibold text-lg">No Active Alerts</p>
+                    <p class="text-slate-400">It's all clear for the selected region.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="site-footer">
+        <p>&copy; 2025 ResQHub. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        const mockAlerts = {
+            national: [
+                {
+                    id: 99,
+                    title: "Nationwide Monsoon Advisory",
+                    severity: "Advisory",
+                    timestamp: "2025-09-11T09:00:00Z",
+                    description: "Heavy to very heavy rainfall expected in several states over the next 48 hours. Citizens are advised to avoid waterlogged areas and check travel routes before commuting.",
+                    source: "NDMA"
+                }
+            ],
+            odisha: [
+                {
+                    id: 1,
+                    title: "Cyclone Warning for Coastal Districts",
+                    severity: "Warning",
+                    timestamp: "2025-09-11T12:00:00Z",
+                    description: "A severe cyclonic storm, 'Vayu', is expected to make landfall near Puri by tomorrow evening. Wind speeds may reach 150-160 km/h. Evacuate low-lying areas immediately. Fishing operations are suspended.",
+                    source: "IMD"
+                },
+                {
+                    id: 2,
+                    title: "Flash Flood Watch for Mahanadi River Basin",
+                    severity: "Watch",
+                    timestamp: "2025-09-10T18:30:00Z",
+                    description: "Due to persistent heavy rains, water levels in the Mahanadi river are rising rapidly. A flash flood situation is possible within the next 24 hours. Monitor updates closely.",
+                    source: "State Disaster Management"
+                }
+            ],
+            uttarakhand: [
+                {
+                    id: 3,
+                    title: "Landslide Warning in Effect for Chamoli",
+                    severity: "Warning",
+                    timestamp: "2025-09-11T11:15:00Z",
+                    description: "Critical landslide warning issued for the Chamoli district due to oversaturated soil from continuous rainfall. The Badrinath highway is blocked at several points. Avoid all non-essential travel.",
+                    source: "USDMA"
+                }
+            ],
+            kerala: [],
+            gujarat: [
+                {
+                    id: 4,
+                    title: "Heatwave Advisory for Kutch Region",
+                    severity: "Advisory",
+                    timestamp: "2025-09-10T14:00:00Z",
+                    description: "Temperatures are expected to exceed 42°C in the Kutch region for the next 72 hours. Stay hydrated, avoid direct sun exposure between 11 AM and 4 PM, and be aware of heatstroke symptoms.",
+                    source: "State Health Dept."
+                }
+            ],
+            bihar: [],
+        };
+
+        const severityStyles = {
+            'Warning': { icon: 'fa-triangle-exclamation', color: 'red-500', border: 'red-500' },
+            'Watch': { icon: 'fa-eye', color: 'yellow-400', border: 'yellow-400' },
+            'Advisory': { icon: 'fa-info-circle', color: 'blue-400', border: 'blue-400' }
+        };
+
+        const regionSelect = document.getElementById('region-select');
+        const alertsContainer = document.getElementById('alerts-container');
+        const placeholder = document.getElementById('placeholder');
+        const notificationToggle = document.getElementById('notification-toggle');
+        const bellIcon = document.getElementById('bell-icon');
+        const bellText = document.getElementById('bell-text');
+        const notificationStatus = document.getElementById('notification-status');
+        let notificationsEnabled = false;
+
+        function formatTimeAgo(isoString) {
+            const date = new Date(isoString);
+            const now = new Date();
+            const seconds = Math.floor((now - date) / 1000);
+            
+            let interval = seconds / 31536000;
+            if (interval > 1) return Math.floor(interval) + " years ago";
+            interval = seconds / 2592000;
+            if (interval > 1) return Math.floor(interval) + " months ago";
+            interval = seconds / 86400;
+            if (interval > 1) return Math.floor(interval) + " days ago";
+            interval = seconds / 3600;
+            if (interval > 1) return Math.floor(interval) + " hours ago";
+            interval = seconds / 60;
+            if (interval > 1) return Math.floor(interval) + " minutes ago";
+            return Math.floor(seconds) + " seconds ago";
+        }
+
+        function createAlertCard(alert) {
+            const styles = severityStyles[alert.severity];
+            return `
+                <div class="alert-card bg-slate-700/50 p-4 rounded-xl border-l-4 border-${styles.border} flex items-start gap-4 fade-in">
+                    <div class="p-2 bg-slate-900/50 rounded-full mt-1">
+                        <i class="fas ${styles.icon} text-xl text-${styles.color}"></i>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-baseline">
+                            <h3 class="font-bold text-lg text-slate-100">${alert.title}</h3>
+                            <p class="text-xs text-slate-400 flex-shrink-0 ml-4">${formatTimeAgo(alert.timestamp)}</p>
+                        </div>
+                        <p class="text-slate-300 text-sm mt-1">${alert.description}</p>
+                        <p class="text-xs text-slate-500 mt-2 font-semibold">Source: ${alert.source}</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function renderAlerts(region) {
+            const stateAlerts = mockAlerts[region] || [];
+            const nationalAlerts = region === 'national' ? [] : mockAlerts.national;
+            const allAlerts = [...stateAlerts, ...nationalAlerts].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            alertsContainer.innerHTML = '';
+
+            if (allAlerts.length === 0) {
+                placeholder.classList.remove('hidden');
+                alertsContainer.classList.add('hidden');
+            } else {
+                placeholder.classList.add('hidden');
+                alertsContainer.classList.remove('hidden');
+                alertsContainer.innerHTML = allAlerts.map(createAlertCard).join('');
+            }
+        }
+
+        notificationToggle.addEventListener('click', () => {
+            notificationsEnabled = !notificationsEnabled;
+            if (notificationsEnabled) {
+                bellIcon.className = 'fas fa-bell text-emerald-400';
+                bellText.textContent = 'Enabled';
+                notificationStatus.textContent = 'Push notifications enabled for this device.';
+                console.log('FCM Push Notifications Subscribed (Simulated)');
+            } else {
+                bellIcon.className = 'fas fa-bell-slash text-slate-400';
+                bellText.textContent = 'Enable';
+                notificationStatus.textContent = 'Push notifications disabled.';
+                console.log('FCM Push Notifications Unsubscribed (Simulated)');
+            }
+            setTimeout(() => { notificationStatus.textContent = ''; }, 4000);
+        });
+
+        regionSelect.addEventListener('change', (e) => {
+            renderAlerts(e.target.value);
+        });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            renderAlerts(regionSelect.value);
+        });
+    </script>
+</body>
+</html>

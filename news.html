@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Disaster Watch - Latest News</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f8fafc; /* slate-50 */
+            scroll-behavior: smooth;
+        }
+
+        /* ✅ NEW HEADER & FOOTER STYLES (LIGHT THEME) */
+        .site-header {
+            background-color: #ffffff; /* White */
+            padding: 15px 20px;
+            border-bottom: 1px solid #e2e8f0; /* slate-200 */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .logo-link {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: #0f172a; /* slate-900 */
+        }
+        .logo-image {
+            height: 60px;
+            margin-right: 15px;
+        }
+        .site-name {
+            font-size: 1.75em;
+            font-weight: 700;
+        }
+        .profile-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #3b82f6; /* blue-500 */
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        .profile-button:hover {
+            background-color: #2563eb; /* blue-600 */
+        }
+        .site-footer {
+            background-color: #f1f5f9; /* slate-100 */
+            color: #475569; /* slate-600 */
+            text-align: center;
+            padding: 25px 0;
+            font-size: 0.9em;
+            border-top: 1px solid #e2e8f0; /* slate-200 */
+            margin-top: 32px; /* Add space above footer */
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <header class="site-header sticky top-0 z-10">
+        <div class="header-container">
+            <a href="index.html" class="logo-link">
+                <img src="logo.png" alt="ResQHub Logo" class="logo-image">
+                <span class="site-name">ResQHub</span>
+            </a>
+            <a href="profile.html" class="profile-button">Profile</a>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <section id="filters" class="mb-8">
+            <h2 class="text-2xl font-bold mb-4">Latest Disaster News</h2>
+            <div class="flex flex-wrap gap-2">
+                <button class="px-4 py-2 text-sm font-semibold bg-cyan-600 text-white rounded-full shadow-sm">All</button>
+                <button class="px-4 py-2 text-sm font-semibold bg-white border border-slate-300 text-slate-600 rounded-full hover:bg-slate-50">Earthquake</button>
+                <button class="px-4 py-2 text-sm font-semibold bg-white border border-slate-300 text-slate-600 rounded-full hover:bg-slate-50">Flood</button>
+                <button class="px-4 py-2 text-sm font-semibold bg-white border border-slate-300 text-slate-600 rounded-full hover:bg-slate-50">Wildfire</button>
+                <button class="px-4 py-2 text-sm font-semibold bg-white border border-slate-300 text-slate-600 rounded-full hover:bg-slate-50">Cyclone</button>
+            </div>
+        </section>
+
+        <section id="news-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+            <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                <div class="p-4 flex items-center gap-3 border-b border-slate-100">
+                    <i class="fab fa-twitter text-xl text-sky-500"></i>
+                    <div>
+                        <p class="font-semibold text-sm">NDMA India</p>
+                        <p class="text-xs text-slate-500">@ndmaindia · 2h ago</p>
+                    </div>
+                </div>
+                <img src="https://via.placeholder.com/600x400.png?text=Wildfire+Image" alt="News Image" class="w-full h-48 object-cover">
+                <div class="p-4 flex-grow">
+                    <h3 class="font-bold mb-2">Alert: Wildfires spreading in the northern regions. Evacuation orders in place.</h3>
+                    <p class="text-sm text-slate-600">Authorities have issued immediate evacuation notices for several districts as wildfires continue to spread due to high winds...</p>
+                </div>
+                <div class="p-4 bg-slate-50 border-t border-slate-200">
+                    <a href="#" class="text-sm font-semibold text-cyan-600 hover:underline">View on X</a>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                <div class="p-4 flex items-center gap-3 border-b border-slate-100">
+                    <i class="fas fa-newspaper text-xl text-slate-500"></i>
+                    <div>
+                        <p class="font-semibold text-sm">Global News Network</p>
+                        <p class="text-xs text-slate-500">5h ago</p>
+                    </div>
+                </div>
+                <img src="https://via.placeholder.com/600x400.png?text=Flood+Photo" alt="News Image" class="w-full h-48 object-cover">
+                <div class="p-4 flex-grow">
+                    <h3 class="font-bold mb-2">Monsoon Floods Affect Millions, Rescue Efforts Underway</h3>
+                    <p class="text-sm text-slate-600">Heavy monsoon rains have led to widespread flooding across the coastal plains, displacing an estimated two million people. Rescue teams are working around the clock.</p>
+                </div>
+                <div class="p-4 bg-slate-50 border-t border-slate-200">
+                    <a href="#" class="text-sm font-semibold text-cyan-600 hover:underline">Read Full Article</a>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                <div class="p-4 flex items-center gap-3 border-b border-slate-100">
+                    <i class="fas fa-satellite text-xl text-red-500"></i>
+                    <div>
+                        <p class="font-semibold text-sm">IMD Satellite Division</p>
+                        <p class="text-xs text-slate-500">8h ago</p>
+                    </div>
+                </div>
+                <img src="https://via.placeholder.com/600x400.png?text=Cyclone+Path" alt="News Image" class="w-full h-48 object-cover">
+                <div class="p-4 flex-grow">
+                    <h3 class="font-bold mb-2">Cyclone 'Tej' Intensifies, Expected to Make Landfall on East Coast</h3>
+                    <p class="text-sm text-slate-600">The India Meteorological Department has upgraded Cyclone 'Tej' to a "Very Severe Cyclonic Storm," with landfall predicted in the next 48 hours.</p>
+                </div>
+                <div class="p-4 bg-slate-50 border-t border-slate-200">
+                    <a href="#" class="text-sm font-semibold text-cyan-600 hover:underline">Track Cyclone</a>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <footer class="site-footer">
+        <p>&copy; 2025 ResQHub. All Rights Reserved.</p>
+    </footer>
+
+    <script src="newsapp.js" type="module"></script>
+</body>
+</html>

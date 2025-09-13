@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title> Earthquake Quiz - Updated</title>
+<style>
+/* Base Styles & Typography */
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background-color: #0d1117;
+    background-size: cover;
+    background-position: center;
+    transition: background-image 1s ease-in-out, filter 1s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+    filter: brightness(0.9);
+}
+body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1;
+}
+
+/* Game Container & Layout */
+.game {
+    width: 900px;
+    max-width: 95vw;
+    background: rgba(18, 24, 31, 0.95);
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+    position: relative;
+    z-index: 2;
+    transform: scale(1);
+    transition: transform 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+.title {
+    font-size: 28px;
+    font-weight: 700;
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+}
+
+/* Score & Panic Bar */
+.score {
+    font-size: 20px;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 8px 15px;
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+}
+.score-animation {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    font-size: 30px;
+    font-weight: bold;
+    animation: scorePop 0.8s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+}
+.score-correct { color: #4ade80; }
+.score-wrong { color: #ef4444; }
+.panic-wrap {
+    height: 25px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 15px 0;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.panic-bar {
+    height: 100%;
+    width: 50%;
+    background: #f59e0b; /* Default mid-range color */
+    transition: width 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), background 0.5s ease-in-out;
+}
+
+/* Questions & Options */
+.question {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+}
+.options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+.option {
+    padding: 15px;
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.08);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: 0.3s;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.option:hover {
+    transform: translateY(-5px) scale(1.02);
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+.option.correct {
+    background: rgba(74, 222, 128, 0.3);
+    border-color: #4ade80;
+    animation: pop 0.5s ease-out;
+}
+.option.wrong {
+    background: rgba(255, 107, 107, 0.3);
+    border-color: #ef4444;
+    animation: pop 0.5s ease-out;
+}
+.letter {
+    width: 35px;
+    height: 35px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 18px;
+}
+.explain {
+    margin-top: 15px;
+    font-size: 15px;
+    color: #b0c0d0;
+    display: none;
+    line-height: 1.6;
+}
+
+/* Buttons & Controls */
+.controls {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+}
+button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 16px;
+    transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s;
+}
+button:active {
+    transform: translateY(2px);
+    box-shadow: none;
+}
+.btn-next {
+    background: #4ade80;
+    color: #06201a;
+    box-shadow: 0 4px 10px rgba(74, 222, 128, 0.4);
+}
+.btn-start {
+    background: #60a5fa;
+    color: #042235;
+    box-shadow: 0 4px 10px rgba(96, 165, 250, 0.4);
+}
+.btn-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* Final Panel */
+.final {
+    text-align: center;
+    padding: 40px;
+}
+.bigscore {
+    font-size: 64px;
+    font-weight: 800;
+    text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.5);
+}
+.level {
+    font-size: 24px;
+    margin-top: 10px;
+    font-weight: 600;
+    color: #9be6ff;
+}
+
+/* Animations */
+@keyframes scorePop {
+    0% { transform: translate(-50%, 0); opacity: 0; }
+    50% { transform: translate(-50%, -50%); opacity: 1; }
+    100% { transform: translate(-50%, -100%); opacity: 0; }
+}
+@keyframes pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+.shake {
+    animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+    transform: translate3d(0, 0, 0);
+}
+@keyframes shake {
+    10%, 90% { transform: translate3d(-3px, 0, 0); }
+    20%, 80% { transform: translate3d(6px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-9px, 0, 0); }
+    40%, 60% { transform: translate3d(9px, 0, 0); }
+}
+.timer-pulse {
+    animation: pulse 1s infinite alternate;
+}
+@keyframes pulse {
+    from { transform: scale(1); }
+    to { transform: scale(1.1); }
+}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="game" id="game">
+    <header>
+        <div class="title">School Earthquake Quiz</div>
+        <div class="score" id="score">Score: 0</div>
+    </header>
+
+    <div class="panic-wrap"><div class="panic-bar" id="panicBar"></div></div>
+
+    <div id="content">
+        <div id="startPanel">
+            <p>5 school-focused earthquake questions. 15 seconds per question. ✅ Correct = +10, ❌ Wrong = -10 (Panic meter changes)</p>
+            <button class="btn-start" id="startBtn">Start Quiz</button>
+        </div>
+
+        <div id="questionPanel" style="display:none;">
+            <div class="question" id="questionText"></div>
+            <div class="options" id="optionsContainer"></div>
+            <div class="explain" id="explainBox"></div>
+            <div class="controls"><button id="nextBtn" class="btn-next btn-disabled" disabled>Next ▶</button></div>
+            <div style="margin-top:10px; font-size:18px;">Time left: <span id="timeLeft">15</span>s</div>
+        </div>
+
+        <div id="finalPanel" style="display:none;" class="final">
+            <div class="bigscore" id="finalScore"></div>
+            <div class="level" id="finalLevel"></div>
+            <div style="margin-top:20px;"><button id="restartBtn" class="btn-start">Play Again</button></div>
+        </div>
+    </div>
+</div>
+
+<script>
+const questions = [
+    {q:"You are sitting in your classroom on the first floor when the ground starts shaking. What should you do first?", opts:["Run to the staircase immediately","Hide under your wooden desk and hold its legs tightly","Stand near the classroom window","Shout and run outside"], correct:1, explain:"NDMA advises students to Drop, Cover, and Hold On under strong desks during shaking.", bg:"https://image.pollinations.ai/prompt/Indian%20school%20classroom%20during%20earthquake%2C%20stylized%20illustration%2C%20sense%20of%20movement%20and%20vibration%2C%20muted%20colors%2C%20digital%20art?width=1200&height=800&seed=23"},
+    {q:"You are walking in the school corridor during recess when an earthquake starts. What is the safest action?", opts:["Rush to the nearest staircase","Move into an empty classroom and take cover under a desk","Lie down near the corridor wall","Run towards the school gate"], correct:1, explain:"Corridors and staircases are dangerous during shaking. Move to a classroom and take cover.", bg:"https://image.pollinations.ai/prompt/Abstract%20art%20of%20cracked%20school%20corridor%20in%20India%2C%20earthquake%20theme%2C%20shattered%20effects%2C%20low%20light%2C%20dramatic%20illustration?width=1200&height=800&seed=24"},
+    {q:"You are in your school library when an earthquake starts. What should you do?", opts:["Run out quickly holding your books","Stand near tall bookshelves","Move away from bookshelves and take cover under a sturdy table","Lie down on the library floor"], correct:2, explain:"Bookshelves can topple and cause injuries. Move away from tall furniture and take cover under a table.", bg:"https://image.pollinations.ai/prompt/Stylized%20Indian%20school%20library%20with%20toppling%20bookshelves%2C%20motion%20blur%2C%20dynamic%20composition%2C%20painterly%20style%2C%20sepia%20tones%2C%20disaster%20art?width=1200&height=800&seed=25"},
+    {q:"After evacuation, where should all students gather as per most Indian school disaster plans?", opts:["Parking area near buses","Assembly ground / playground","School terrace","Inside the library"], correct:1, explain:"Open assembly grounds are safe and used in NDMA’s School Safety Guidelines for post-evacuation gathering.", bg:"https://image.pollinations.ai/prompt/Aerial%20view%20of%20Indian%20school%20playground%20with%20students%20gathering%20post-earthquake%2C%20hopeful%20atmosphere%2C%20soft%20daylight%2C%20illustration%2C%20minimalist%20style?width=1200&height=800&seed=26"},
+    {q:"After the earthquake stops, what should you do before re-entering the school building?", opts:["Rush back to collect your bag","Wait in the ground until teachers say it’s safe","Go back alone to the classroom","Sit under a tree near the building"], correct:1, explain:"Aftershocks can cause damage. Students must wait in the open ground until teachers or safety teams give clearance.", bg:"https://image.pollinations.ai/prompt/Artistic%20rendering%20of%20damaged%20Indian%20school%20building%20from%20a%20distance%2C%20students%20waiting%20safely%20in%20foreground%2C%20moody%20sky%2C%20digital%20painting%2C%20focus%20on%20safety?width=1200&height=800&seed=27"}
+];
+
+let current = 0, score = 0, panic = 50, timeLeft = 15, timerInterval = null, answered = false;
+const startBtn = document.getElementById('startBtn'), startPanel = document.getElementById('startPanel'), questionPanel = document.getElementById('questionPanel'), finalPanel = document.getElementById('finalPanel');
+const questionText = document.getElementById('questionText'), optionsContainer = document.getElementById('optionsContainer'), explainBox = document.getElementById('explainBox');
+const nextBtn = document.getElementById('nextBtn'), scoreEl = document.getElementById('score'), panicBar = document.getElementById('panicBar');
+const timeLeftEl = document.getElementById('timeLeft'), finalScore = document.getElementById('finalScore'), finalLevel = document.getElementById('finalLevel');
+const gameWrap = document.getElementById('game');
+
+function updateScore(points = 0) {
+    if (points !== 0) {
+        const scoreAnim = document.createElement('div');
+        scoreAnim.textContent = (points > 0 ? '+' : '') + points;
+        scoreAnim.classList.add('score-animation');
+        scoreAnim.classList.add(points > 0 ? 'score-correct' : 'score-wrong');
+        scoreEl.appendChild(scoreAnim);
+        setTimeout(() => scoreAnim.remove(), 800);
+    }
+    scoreEl.textContent = 'Score: ' + score;
+}
+
+function updatePanicBar() {
+    panicBar.style.width = panic + '%';
+    let color;
+    if (panic > 70) {
+        color = '#4ade80'; // Green
+    } else if (panic > 40) {
+        color = '#f59e0b'; // Yellow
+    } else {
+        color = '#ef4444'; // Red
+    }
+    panicBar.style.background = color;
+}
+
+function checkPanicFail() {
+    if (panic <= 0) {
+        endQuiz();
+    }
+}
+
+function loadQuestion(idx) {
+    answered = false;
+    nextBtn.disabled = true;
+    nextBtn.classList.add('btn-disabled');
+    explainBox.style.display = 'none';
+    questionText.textContent = questions[idx].q;
+    
+    // Animate background image change
+    document.body.style.filter = 'brightness(0.6)';
+    setTimeout(() => {
+        document.body.style.backgroundImage = `url('${questions[idx].bg}')`;
+        document.body.style.filter = 'brightness(0.9)';
+    }, 500);
+
+    optionsContainer.innerHTML = '';
+    questions[idx].opts.forEach((opt, i) => {
+        const div = document.createElement('div');
+        div.className = 'option';
+        div.dataset.index = i;
+        div.innerHTML = `<div class="letter">${String.fromCharCode(65 + i)}</div><div>${opt}</div>`;
+        div.addEventListener('click', () => selectOption(i, div));
+        optionsContainer.appendChild(div);
+    });
+    timeLeft = 15;
+    timeLeftEl.textContent = timeLeft.toFixed(0);
+    startTimer();
+}
+
+function selectOption(i, el) {
+    if (answered) return;
+    answered = true;
+    clearInterval(timerInterval);
+    const q = questions[current];
+    Array.from(optionsContainer.children).forEach(opt => opt.style.pointerEvents = 'none');
+    let points = 0;
+    if (i === q.correct) {
+        points = 10;
+        score += points;
+        panic = Math.min(100, panic + 10);
+        if (el) el.classList.add('correct');
+    } else {
+        points = -10;
+        score += points;
+        panic = Math.max(0, panic - 15);
+        if (el) el.classList.add('wrong');
+        const correctOpt = optionsContainer.querySelector(`[data-index="${q.correct}"]`);
+        if (correctOpt) correctOpt.classList.add('correct');
+        gameWrap.classList.add('shake');
+        setTimeout(() => gameWrap.classList.remove('shake'), 500);
+    }
+    explainBox.style.display = 'block';
+    explainBox.textContent = q.explain;
+    updateScore(points);
+    updatePanicBar();
+    nextBtn.disabled = false;
+    nextBtn.classList.remove('btn-disabled');
+    checkPanicFail();
+}
+
+function startTimer() {
+    clearInterval(timerInterval);
+    timeLeftEl.classList.remove('timer-pulse');
+    timerInterval = setInterval(() => {
+        timeLeft -= 0.1;
+        timeLeftEl.textContent = Math.ceil(timeLeft);
+        if (timeLeft <= 5) {
+            timeLeftEl.classList.add('timer-pulse');
+        }
+        if (timeLeft <= 0 && !answered) {
+            selectOption(-1, null);
+        }
+    }, 100);
+}
+
+function endQuiz() {
+    clearInterval(timerInterval);
+    questionPanel.style.display = 'none';
+    finalPanel.style.display = 'block';
+    finalScore.textContent = score;
+    if (score >= 40) {
+        finalLevel.textContent = "Resilient";
+        finalLevel.style.color = '#4ade80';
+    } else if (score >= 20) {
+        finalLevel.textContent = "Alert";
+        finalLevel.style.color = '#f59e0b';
+    } else {
+        finalLevel.textContent = "Needs Improvement";
+        finalLevel.style.color = '#ef4444';
+    }
+}
+
+startBtn.addEventListener('click', () => {
+    startPanel.style.display = 'none';
+    questionPanel.style.display = 'block';
+    current = 0;
+    score = 0;
+    panic = 50;
+    updateScore();
+    updatePanicBar();
+    loadQuestion(current);
+});
+
+nextBtn.addEventListener('click', () => {
+    current++;
+    if (current >= questions.length) {
+        endQuiz();
+        return;
+    }
+    loadQuestion(current);
+});
+
+document.getElementById('restartBtn').addEventListener('click', () => {
+    finalPanel.style.display = 'none';
+    startPanel.style.display = 'block';
+    panic = 50;
+    updatePanicBar();
+    score = 0;
+    updateScore();
+});
+
+updateScore();
+updatePanicBar();
+</script>
+</body>
+</html>

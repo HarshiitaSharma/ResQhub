@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Disaster Arcade — Rescue Puzzle</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <style>
+    body { 
+      font-family: 'Press+Start+2P', monospace; 
+      background-color: #f1f5f9;
+      color: #0f172a;
+      margin: 0;
+    }
+    /* Header main container */
+    .site-header {
+        background-color: #ffffff;
+        padding: 15px 20px; /* <-- UPDATED PADDING HERE */
+        border-bottom: 1px solid #e0e0e0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    /* Flexbox container for alignment */
+    .header-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    /* Logo and site name link */
+    .logo-link {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        color: #333;
+    }
+    /* Logo image styling */
+    .logo-image {
+        height: 60px;
+        margin-right: 10px;
+    }
+    /* Site name styling */
+    .site-name {
+        font-size: 1.5em;
+        font-weight: bold;
+    }
+    /* Profile button styling */
+    .profile-button {
+        display: inline-block;
+        padding: 8px 16px;
+        background-color: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        transition: background-color 0.3s ease;
+    }
+    .profile-button:hover {
+        background-color: #0056b3;
+    }
+    
+    .site-footer {
+        background-color: #343a40;
+        color: #ffffff;
+        text-align: center;
+        padding: 20px 0;
+        font-size: 0.8em;
+        margin-top: 40px;
+    }
+  </style>
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-container">
+            <a href="index.html" class="logo-link">
+                <img src="logo.png" alt="ResQHub Logo" class="logo-image">
+                <span class="site-name">ResQHub</span>
+            </a>
+            <a href="profile.html" class="profile-button">Profile</a>
+        </div>
+    </header>
+
+    <div class="min-h-screen flex flex-col items-center p-4">
+
+        <header class="w-full max-w-5xl flex items-center justify-between my-4 border-b-2 border-slate-300 pb-2">
+            <h1 class="text-xl text-cyan-600">🎮 Disaster Arcade</h1>
+            <div id="topbar" class="flex gap-4 items-center">
+                <div id="scoreBadge" class="px-3 py-1 bg-green-600 text-white rounded text-xs">Score: 0</div>
+            </div>
+        </header>
+
+        <main class="w-full max-w-5xl bg-white rounded-lg p-4 shadow-lg border border-slate-200">
+            <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="md:col-span-2">
+                  <div id="p5-container" class="w-full h-auto bg-slate-50 rounded-lg relative border border-slate-200"></div>
+                </div>
+      
+                <aside class="p-4 bg-slate-50 rounded-lg flex flex-col justify-between border border-slate-200">
+                  <div>
+                    <h2 class="text-sm mb-2 text-amber-600">Scenario</h2>
+                    <select id="scenarioSelector" class="w-full p-2 mb-2 text-sm border border-slate-300 rounded bg-white"></select>
+                    <div id="scenarioDescription" class="text-xs mb-4 text-slate-600">Select a scenario to begin.</div>
+      
+                    <h3 class="text-sm mb-2 text-amber-600">Controls</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                      <button id="hintBtn" class="w-full px-2 py-2 bg-yellow-400 hover:bg-yellow-500 text-black rounded text-xs transition-colors"><i class="fas fa-lightbulb mr-1"></i> Hint</button>
+                      <button id="resetBtn" class="w-full px-2 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded text-xs transition-colors"><i class="fas fa-sync-alt mr-1"></i> Reset</button>
+                    </div>
+                  </div>
+      
+                  <div class="mt-6">
+                    <div class="text-xs mb-1 text-amber-600">Progress</div>
+                    <div class="w-full bg-slate-200 rounded h-4 overflow-hidden border border-slate-300">
+                        <div id="xpBar" class="h-full bg-green-500 transition-all duration-500 ease-out" style="width:0%"></div>
+                    </div>
+                    <div id="log" class="text-xs text-center mt-3 text-cyan-700 h-8">Drag cards to the stretcher.</div>
+                  </div>
+                </aside>
+              </section>
+        </main>
+    </div>
+
+    <footer class="site-footer">
+        <p>&copy; 2025 ResQHub. All Rights Reserved.</p>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+    <script type="module" src="firebase.js"></script> 
+    <script src="app.js" type="module"></script>
+</body>
+</html>

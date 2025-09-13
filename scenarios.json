@@ -1,0 +1,79 @@
+{
+  "Cyclone": {
+    "title": "Cyclone Drowning",
+    "description": "A person has been caught in cyclone floodwaters. Place the rescue steps in order.",
+    "steps": [
+      "Throw Rope/Float",
+      "Check Response",
+      "Perform CPR",
+      "Keep Victim Warm",
+      "Alert Authorities"
+    ]
+  },
+  "Flood": {
+    "title": "Flood Rescue",
+    "description": "Someone is stranded in rising floodwaters. What is the correct procedure?",
+    "steps": [
+      "Reach with an Object",
+      "Move to High Ground",
+      "Provide Dry Clothing",
+      "Check for Hypothermia",
+      "Call for Medical Aid"
+    ]
+  },
+  "Earthquake": {
+    "title": "Post-Earthquake Aid",
+    "description": "An earthquake has stopped. You find someone with minor injuries.",
+    "steps": [
+      "Drop, Cover, Hold On",
+      "Check for Hazards",
+      "Provide Basic First Aid",
+      "Find a Safe Location",
+      "Listen to Authorities"
+    ]
+  },
+  "Wildfire": {
+    "title": "Wildfire Evacuation",
+    "description": "You need to help someone escape an approaching wildfire.",
+    "steps": [
+      "Evacuate Immediately",
+      "Cover Mouth/Nose",
+      "Check for Burns",
+      "Cool Burns with Water",
+      "Seek Medical Help"
+    ]
+  },
+  "Avalanche": {
+    "title": "Avalanche Rescue",
+    "description": "A skier has been buried in an avalanche. Time is critical.",
+    "steps": [
+      "Ensure Scene is Safe",
+      "Use Transceiver to Find",
+      "Probe Systematically",
+      "Dig Strategically",
+      "Assess for Injuries"
+    ]
+  },
+  "Landslide": {
+    "title": "Landslide Aftermath",
+    "description": "After a landslide, you find a trapped but conscious person.",
+    "steps": [
+      "Move to Stable Ground",
+      "Alert Authorities",
+      "Do Not Move Victim",
+      "Provide Reassurance",
+      "Check for Injuries"
+    ]
+  },
+  "Tsunami": {
+    "title": "Tsunami Survival",
+    "description": "A tsunami warning has been issued. What are the key survival steps?",
+    "steps": [
+      "Move to High Ground",
+      "Grab Floating Object",
+      "Stay Away From Water",
+      "Check for Injuries",
+      "Find Clean Drinking Water"
+    ]
+  }
+}

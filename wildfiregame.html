@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wildfire Safety Quiz</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+/* Base Styles & Typography */
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background-size: cover;
+    background-position: center;
+    transition: background-image 1s ease-in-out, filter 1s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+    background-color: #1a1a1a; 
+    filter: brightness(0.9);
+}
+
+/* Creates a dark overlay on the background for better text readability */
+body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1;
+}
+
+/* Game Container & Layout */
+.game {
+    width: 900px;
+    max-width: 95vw;
+    background: rgba(18, 24, 31, 0.95);
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+    position: relative;
+    z-index: 2;
+    transform: scale(1);
+    transition: transform 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+.title {
+    font-size: 28px;
+    font-weight: 700;
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+}
+
+/* Score & Panic Bar */
+.score {
+    font-size: 20px;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 8px 15px;
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+}
+.score-animation {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    font-size: 30px;
+    font-weight: bold;
+    animation: scorePop 0.8s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+}
+.score-correct { color: #4ade80; }
+.score-wrong { color: #ef4444; }
+.panic-wrap {
+    height: 25px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 15px 0;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.panic-bar {
+    height: 100%;
+    width: 50%;
+    background: #f59e0b;
+    transition: width 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), background 0.5s ease-in-out;
+}
+
+/* Questions & Options */
+.question {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+}
+.options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+.option {
+    padding: 15px;
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.08);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: 0.3s;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.option:hover {
+    transform: translateY(-5px) scale(1.02);
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+.option.correct {
+    background: rgba(74, 222, 128, 0.3);
+    border-color: #4ade80;
+    animation: pop 0.5s ease-out;
+}
+.option.wrong {
+    background: rgba(255, 107, 107, 0.3);
+    border-color: #ef4444;
+    animation: pop 0.5s ease-out;
+}
+.letter {
+    width: 35px;
+    height: 35px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 18px;
+}
+.explain {
+    margin-top: 15px;
+    font-size: 15px;
+    color: #b0c0d0;
+    display: none;
+    line-height: 1.6;
+}
+
+/* Buttons & Controls */
+.controls {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+}
+button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 16px;
+    transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s;
+}
+button:active {
+    transform: translateY(2px);
+    box-shadow: none;
+}
+.btn-next {
+    background: #4ade80;
+    color: #06201a;
+    box-shadow: 0 4px 10px rgba(74, 222, 128, 0.4);
+}
+.btn-start {
+    background: #60a5fa;
+    color: #042235;
+    box-shadow: 0 4px 10px rgba(96, 165, 250, 0.4);
+}
+.btn-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* Final Panel */
+.final {
+    text-align: center;
+    padding: 40px;
+}
+.bigscore {
+    font-size: 64px;
+    font-weight: 800;
+    text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.5);
+}
+.level {
+    font-size: 24px;
+    margin-top: 10px;
+    font-weight: 600;
+    color: #9be6ff;
+}
+
+/* Fire Animation when incorrect answer is selected */
+#fire-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 10;
+    pointer-events: none;
+}
+#fire-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+.fire-effect {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    background: radial-gradient(circle, rgba(255, 140, 0, 0.8) 0%, rgba(255, 69, 0, 0.6) 20%, rgba(255, 0, 0, 0.3) 50%, transparent 70%);
+    animation: fire-flicker 0.3s ease-in-out infinite alternate;
+}
+
+/* General Animations */
+@keyframes scorePop {
+    0% { transform: translate(-50%, 0); opacity: 0; }
+    50% { transform: translate(-50%, -50%); opacity: 1; }
+    100% { transform: translate(-50%, -100%); opacity: 0; }
+}
+@keyframes pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+.shake {
+    animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+    transform: translate3d(0, 0, 0);
+}
+@keyframes shake {
+    10%, 90% { transform: translate3d(-3px, 0, 0); }
+    20%, 80% { transform: translate3d(6px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-9px, 0, 0); }
+    40%, 60% { transform: translate3d(9px, 0, 0); }
+}
+.timer-pulse {
+    animation: pulse 1s infinite alternate;
+}
+@keyframes pulse {
+    from { transform: scale(1); }
+    to { transform: scale(1.1); }
+}
+.flame-shake {
+    animation: flameShake 0.5s linear infinite alternate;
+}
+@keyframes flameShake {
+    0% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 69, 0, 0.6); }
+    100% { transform: scale(1.01); box-shadow: 0 0 25px rgba(255, 140, 0, 0.8), 0 0 40px rgba(255, 69, 0, 0.8); }
+}
+@keyframes fire-flicker {
+    0% { box-shadow: 0 0 20px 5px rgba(255, 140, 0, 0.7), 0 0 40px 10px rgba(255, 69, 0, 0.5); }
+    50% { box-shadow: 0 0 25px 8px rgba(255, 140, 0, 0.8), 0 0 50px 12px rgba(255, 69, 0, 0.6); }
+    100% { box-shadow: 0 0 20px 5px rgba(255, 140, 0, 0.7), 0 0 40px 10px rgba(255, 69, 0, 0.5); }
+}
+
+/* New CSS for falling fire particles on start screen */
+.fire-particle-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 10;
+}
+.fire-particle {
+    position: absolute;
+    background: radial-gradient(circle, #ff8c00 0%, #ff4500 50%, transparent 80%);
+    border-radius: 50%;
+    opacity: 0;
+    animation: fireDrop 5s linear forwards infinite;
+    box-shadow: 0 0 10px 2px #ff4500, 0 0 20px 5px #ff8c00;
+}
+@keyframes fireDrop {
+    0% { transform: translateY(-10vh) scale(0.5); opacity: 0; }
+    20% { opacity: 0.8; }
+    100% { transform: translateY(110vh) scale(1); opacity: 0; }
+}
+
+/* New CSS for the constant background fire animation */
+.wildfire-animation-container {
+    position: absolute;
+    bottom: -10px;
+    left: 0;
+    width: 100%;
+    height: 250px;
+    z-index: 0;
+    overflow: hidden;
+}
+.wildfire-animation {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(ellipse at bottom, #ff4500 0%, #ff8c00 20%, #8b0000 50%, transparent 80%);
+    animation: fireGlow 2s ease-in-out infinite alternate;
+}
+@keyframes fireGlow {
+    from {
+        box-shadow: 0 0 50px 20px rgba(255, 69, 0, 0.6), 0 0 100px 30px rgba(255, 140, 0, 0.5), 0 0 150px 40px rgba(139, 0, 0, 0.4);
+    }
+    to {
+        box-shadow: 0 0 60px 25px rgba(255, 69, 0, 0.8), 0 0 120px 35px rgba(255, 140, 0, 0.7), 0 0 180px 50px rgba(139, 0, 0, 0.6);
+    }
+}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<div id="fire-overlay"><div class="fire-effect"></div></div>
+<div class="fire-particle-container" id="fireParticles"></div>
+
+<!-- The continuous background fire animation is moved outside the quiz content -->
+<div class="wildfire-animation-container"><div class="wildfire-animation"></div></div>
+
+<div class="game" id="game">
+    <div id="start-screen" class="relative z-10 text-center">
+        <h2 class="text-3xl font-bold mb-2">Wildfire Warning!</h2>
+        <p class="text-lg text-red-200 mb-6">Test your knowledge on wildfire safety. Make the right choices and survive the crisis!</p>
+        <button id="startBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full transition-transform transform hover:scale-105 w-full">Start Quiz</button>
+    </div>
+
+    <div id="quiz-content" style="display:none;">
+        <header>
+            <div class="title">Wildfire Safety Quiz</div>
+            <div class="score" id="score">Score: 0</div>
+        </header>
+
+        <div class="panic-wrap"><div class="panic-bar" id="panicBar"></div></div>
+
+        <div id="questionPanel">
+            <div class="question" id="questionText"></div>
+            <div class="options" id="optionsContainer"></div>
+            <div class="explain" id="explainBox"></div>
+            <div class="controls"><button id="nextBtn" class="btn-next btn-disabled" disabled>Next ▶</button></div>
+            <div style="margin-top:10px; font-size:18px;">Time left: <span id="timeLeft">15</span>s</div>
+        </div>
+    </div>
+
+    <div id="finalPanel" style="display:none;" class="final">
+        <div class="bigscore" id="finalScore"></div>
+        <div class="level" id="finalLevel"></div>
+        <div style="margin-top:20px;"><button id="restartBtn" class="btn-start">Play Again</button></div>
+    </div>
+</div>
+
+<script>
+const questions = [
+    {q:"What is the main cause of most wildfires?", opts:["Lightning strikes","Human carelessness","Very hot weather","Strong winds"], correct:1, explain:"While natural causes like lightning can start fires, human carelessness is the main cause of most wildfires. This includes things like leaving campfires burning, improperly discarding cigarettes, or using fireworks."},
+    {q:"If you see smoke or fire in a forest, who should you tell right away?", opts:["A friend","Your parents or a teacher","A park ranger","A firefighter"], correct:1, explain:"The first and most important step is to tell a responsible adult immediately. They will know how to properly contact emergency services like a fire department or park authority."},
+    {q:"Why is it dangerous to throw a glass bottle in the forest on a sunny day?", opts:["The glass can break and cut animals.","The bottle can heat up and explode.","The bottle can act like a magnifying glass and start a fire.","It makes a mess and pollutes the environment."], correct:2, explain:"Glass can focus the sun’s rays onto dry leaves or grass, creating a hot spot that can quickly ignite a wildfire. This is a simple example of how litter can be a fire hazard."},
+    {q:"What is the safest place for you to go if a wildfire is close to your school?", opts:["Stay in the classroom and hide under a desk.","Run into the forest away from the school.","Follow a teacher to a designated safe place, like an open field.","Go to the roof to get a better view."], correct:2, explain:"In a wildfire emergency, it's crucial to follow the instructions of teachers and school staff. They will guide you to a safe, pre-planned assembly area, which is usually a large, open space away from the fire."},
+    {q:"Which of these is a way that humans can prevent wildfires?", opts:["Leaving a campfire burning overnight.","Throwing a cigarette butt out of a car window.","Making sure a campfire is completely out with water and dirt.","Playing with fireworks in a dry grassy area."], correct:2, explain:"This is an essential step to prevent a fire from escaping a campsite. Using water and dirt to douse and stir embers ensures that no heat remains to ignite a new blaze"}
+];
+
+let current = 0, score = 0, panic = 50, timeLeft = 15, timerInterval = null, answered = false;
+const startScreen = document.getElementById('start-screen');
+const quizContent = document.getElementById('quiz-content');
+const finalPanel = document.getElementById('finalPanel');
+const startBtn = document.getElementById('startBtn');
+const questionText = document.getElementById('questionText');
+const optionsContainer = document.getElementById('optionsContainer');
+const explainBox = document.getElementById('explainBox');
+const nextBtn = document.getElementById('nextBtn');
+const scoreEl = document.getElementById('score');
+const panicBar = document.getElementById('panicBar');
+const timeLeftEl = document.getElementById('timeLeft');
+const finalScore = document.getElementById('finalScore');
+const finalLevel = document.getElementById('finalLevel');
+const gameWrap = document.getElementById('game');
+const fireOverlay = document.getElementById('fire-overlay');
+const fireParticlesContainer = document.getElementById('fireParticles');
+
+function updateScore(points = 0) {
+    if (points !== 0) {
+        const scoreAnim = document.createElement('div');
+        scoreAnim.textContent = (points > 0 ? '+' : '') + points;
+        scoreAnim.classList.add('score-animation');
+        scoreAnim.classList.add(points > 0 ? 'score-correct' : 'score-wrong');
+        scoreEl.appendChild(scoreAnim);
+        setTimeout(() => scoreAnim.remove(), 800);
+    }
+    scoreEl.textContent = 'Score: ' + score;
+}
+
+function updatePanicBar() {
+    panicBar.style.width = panic + '%';
+    let color;
+    if (panic > 70) {
+        color = '#4ade80';
+    } else if (panic > 40) {
+        color = '#f59e0b';
+    } else {
+        color = '#ef4444';
+    }
+    panicBar.style.background = color;
+}
+
+function checkPanicFail() {
+    if (panic <= 0) {
+        endQuiz();
+    }
+}
+
+function loadQuestion(idx) {
+    answered = false;
+    nextBtn.disabled = true;
+    nextBtn.classList.add('btn-disabled');
+    explainBox.style.display = 'none';
+    questionText.textContent = questions[idx].q;
+    optionsContainer.innerHTML = '';
+    questions[idx].opts.forEach((opt, i) => {
+        const div = document.createElement('div');
+        div.className = 'option';
+        div.dataset.index = i;
+        div.innerHTML = `<div class="letter">${String.fromCharCode(65 + i)}</div><div>${opt}</div>`;
+        div.addEventListener('click', () => selectOption(i, div));
+        optionsContainer.appendChild(div);
+    });
+    timeLeft = 15;
+    timeLeftEl.textContent = timeLeft.toFixed(0);
+    startTimer();
+}
+
+function selectOption(i, el) {
+    if (answered) return;
+    answered = true;
+    clearInterval(timerInterval);
+    const q = questions[current];
+    Array.from(optionsContainer.children).forEach(opt => opt.style.pointerEvents = 'none');
+    let points = 0;
+    if (i === q.correct) {
+        points = 10;
+        score += points;
+        panic = Math.min(100, panic + 10);
+        if (el) el.classList.add('correct');
+    } else {
+        points = -10;
+        score += points;
+        panic = Math.max(0, panic - 15);
+        if (el) el.classList.add('wrong');
+        const correctOpt = optionsContainer.querySelector(`[data-index="${q.correct}"]`);
+        if (correctOpt) correctOpt.classList.add('correct');
+        gameWrap.classList.add('flame-shake');
+        fireOverlay.classList.add('active');
+        setTimeout(() => {
+            gameWrap.classList.remove('flame-shake');
+            fireOverlay.classList.remove('active');
+        }, 3000);
+    }
+    explainBox.style.display = 'block';
+    explainBox.textContent = q.explain;
+    updateScore(points);
+    updatePanicBar();
+    nextBtn.disabled = false;
+    nextBtn.classList.remove('btn-disabled');
+    checkPanicFail();
+}
+
+function startTimer() {
+    clearInterval(timerInterval);
+    timeLeftEl.classList.remove('timer-pulse');
+    timerInterval = setInterval(() => {
+        timeLeft -= 0.1;
+        timeLeftEl.textContent = Math.ceil(timeLeft);
+        if (timeLeft <= 5) {
+            timeLeftEl.classList.add('timer-pulse');
+        }
+        if (timeLeft <= 0 && !answered) {
+            selectOption(-1, null);
+        }
+    }, 100);
+}
+
+nextBtn.addEventListener('click', () => {
+    current++;
+    if (current < questions.length) {
+        loadQuestion(current);
+    } else {
+        endQuiz();
+    }
+});
+
+function endQuiz() {
+    clearInterval(timerInterval);
+    quizContent.style.display = 'none';
+    finalPanel.style.display = 'block';
+    finalScore.textContent = score;
+    if (score >= 40) {
+        finalLevel.textContent = "Resilient";
+        finalLevel.style.color = '#4ade80';
+    } else if (score >= 20) {
+        finalLevel.textContent = "Alert";
+        finalLevel.style.color = '#f59e0b';
+    } else {
+        finalLevel.textContent = "Needs Improvement";
+        finalLevel.style.color = '#ef4444';
+    }
+}
+
+function createFireParticles() {
+    const particleCount = 50;
+    for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'fire-particle';
+        particle.style.width = Math.random() * 8 + 'px';
+        particle.style.height = particle.style.width;
+        particle.style.left = Math.random() * 100 + 'vw';
+        particle.style.animationDelay = Math.random() * 5 + 's';
+        fireParticlesContainer.appendChild(particle);
+    }
+}
+
+startBtn.addEventListener('click', () => {
+    startScreen.style.display = 'none';
+    fireParticlesContainer.style.display = 'none';
+    quizContent.style.display = 'block';
+    current = 0;
+    score = 0;
+    panic = 50;
+    updateScore();
+    updatePanicBar();
+    loadQuestion(current);
+});
+
+document.getElementById('restartBtn').addEventListener('click', () => {
+    finalPanel.style.display = 'none';
+    startScreen.style.display = 'block';
+    fireParticlesContainer.style.display = 'block';
+    createFireParticles();
+    panic = 50;
+    updatePanicBar();
+    score = 0;
+    updateScore();
+});
+
+// Run this function on page load to display particles immediately.
+window.onload = createFireParticles;
+
+updateScore();
+updatePanicBar();
+</script>
+</body>
+</html>

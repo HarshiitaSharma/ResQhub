@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pixel Pet First Aid</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <style>
+    body { 
+      font-family: 'Press Start 2P', sans-serif; 
+      background-color: #f0fdf4; /* A very light, cute green */
+      color: #14532d; /* Dark green text */
+    }
+    canvas { 
+      display: block; 
+      margin: 0 auto;
+      border: 3px solid #bbf7d0; /* A soft green border */
+      border-radius: 0.5rem;
+      background-color: #ffffff;
+    }
+    .shake { animation: shake 0.4s; }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); }
+      50% { transform: translateX(8px); } 75% { transform: translateX(-6px); }
+    }
+    .pulse-success { animation: pulse-success 0.5s ease-out; }
+    @keyframes pulse-success {
+      0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+  <main class="w-full max-w-5xl bg-white rounded-lg p-4 shadow-lg border-2 border-green-200">
+    <header class="text-center mb-4 border-b-2 border-green-200 pb-2">
+        <h1 class="text-2xl text-pink-500">Pixel Pet First Aid </h1>
+    </header>
+
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      
+      <div id="p5-container" class="md:col-span-2 w-full h-auto bg-green-50 rounded-lg relative border border-green-200">
+        </div>
+
+      <aside class="p-4 bg-green-50 rounded-lg flex flex-col justify-between border border-green-200">
+        <div>
+          <h2 class="text-sm mb-2 text-pink-500">Objective</h2>
+          <p id="objective-text" class="text-xs mb-4 leading-relaxed">Oh no! Patches the Cat has a scrape. Help fix it!</p>
+
+          <h3 class="text-sm mb-2 text-pink-500">Instructions</h3>
+          <p class="text-xs mb-4 leading-relaxed">Drag the items in the correct order onto the scrape.</p>
+          
+          <button id="resetBtn" class="w-full px-2 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded text-xs transition-colors"><i class="fas fa-sync-alt mr-1"></i> Start Over</button>
+        </div>
+
+        <div class="mt-6 text-center">
+            <div id="log" class="text-sm text-center mt-3 text-cyan-700 h-8">Good luck!</div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+  
+  <script src="pet_game.js" type="module"></script>
+</body>
+</html>

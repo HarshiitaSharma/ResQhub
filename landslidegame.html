@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crisis Countdown - Landslide Survival</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            background-color: #5f524a; /* Earthy brown */
+            color: #f1f5f9;
+        }
+
+        /* --- NEW LANDSLIDE & DEBRIS EFFECTS --- */
+        #landslide-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .debris {
+            position: absolute;
+            background: #443831;
+            border-radius: 20% 50% 40% 60%;
+            animation: fall linear infinite;
+        }
+        
+        @keyframes fall {
+            from {
+                transform: translateY(-200px) rotate(0deg);
+            }
+            to {
+                transform: translateY(110vh) rotate(360deg);
+            }
+        }
+        
+        #landslide-wall {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 150vh;
+            background-image: linear-gradient(to top, rgba(60, 49, 42, 1) 30%, rgba(85, 71, 62, 0.8) 60%, transparent 100%),
+                              url('data:image/svg+xml,%3Csvg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23443831" fill-opacity="0.4"%3E%3Cpath d="M50 50c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10c-5.523 0-10-4.477-10-10zM10 10c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10c-5.523 0-10-4.477-10-10z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');
+            background-size: auto, 40px;
+            transform: translateY(-150vh);
+            transition: transform 15s linear;
+        }
+        #landslide-wall.active { transform: translateY(-110vh); }
+        #landslide-wall.fast { transition: transform 5s linear; transform: translateY(-60vh); }
+
+        /* --- NEW ANIMATION STATE CONTROL --- */
+        #landslide-container.paused .debris {
+            animation-play-state: paused;
+        }
+        #landslide-container.fast-debris .debris {
+            animation-duration: 1.5s !important; /* Speed up debris on wrong answer */
+        }
+
+
+        /* --- UI & ANIMATIONS --- */
+        #timer-bar { transition: width 0.2s linear, background-color 0.3s ease; }
+        
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+        .shake-active { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        
+        @keyframes pulse-red {
+            0%, 100% { background-color: #ef4444; box-shadow: 0 0 8px #ef4444; } 50% { background-color: #f87171; box-shadow: 0 0 12px #f87171; }
+        }
+        .timer-low { animation: pulse-red 1.5s infinite; }
+
+        .option-btn { transition: transform 0.1s ease, background-color 0.2s ease, box-shadow 0.2s ease; }
+        .option-btn:hover { background-color: rgba(255, 255, 255, 0.25); box-shadow: 0 0 10px rgba(255,255,255,0.1); }
+        .option-btn:active { transform: scale(0.97); }
+        
+        @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fade-in 0.5s ease-out forwards; }
+        
+        .feedback-safe { background-color: rgba(34, 197, 94, 0.9); }
+        .feedback-danger { background-color: rgba(239, 68, 68, 0.9); }
+
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <!-- Animated Backgrounds -->
+    <div id="landslide-container">
+        <div id="landslide-wall"></div>
+    </div>
+
+    <div id="game-container" class="relative w-full max-w-lg mx-auto bg-stone-800/60 backdrop-blur-md rounded-2xl shadow-2xl text-white p-6 z-10">
+        <!-- Danger Effect Overlay -->
+        <div id="danger-overlay" class="absolute inset-0 bg-repeat opacity-0 transition-opacity duration-300 pointer-events-none rounded-2xl z-30" style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M54 30L30 6 6 30l12 12 12-12 12 12 12-12zM30 36l-6 6h12l-6-6z\' fill=\'%23a855f7\' fill-opacity=\'0.1\' fill-rule=\'evenodd\'/%3E%3C/svg%3E'); background-size: 20px 20px; mix-blend-mode: hard-light;"></div>
+
+        <!-- In-Game Content -->
+        <div id="game-content" class="relative z-10 hidden">
+            <div class="flex justify-between items-center mb-2">
+                <div><h1 class="text-2xl font-bold">Crisis Countdown</h1><p class="text-orange-300">Landslide Edition</p></div>
+                <div class="text-right"><p class="text-sm font-semibold">SCORE</p><p id="score" class="text-2xl font-bold">0</p></div>
+            </div>
+            <p id="progress-text" class="text-sm text-slate-300 text-center mb-3"></p>
+            <div class="w-full bg-slate-700 rounded-full h-3 mb-4 shadow-inner"><div id="timer-bar" class="bg-orange-400 h-3 rounded-full" style="width: 100%"></div></div>
+            <div id="image-area" class="w-full h-48 bg-stone-900/50 rounded-lg mb-4 overflow-hidden shadow-inner flex items-center justify-center">
+                <img id="question-image" src="" alt="Landslide scenario" class="w-full h-full object-cover transition-opacity duration-500 opacity-0" onerror="this.onerror=null;this.src='https://placehold.co/400x200/44403c/a16207?text=Image+Missing';">
+            </div>
+            <div id="question-area" class="my-6"><p id="question-text" class="text-xl font-semibold min-h-[56px]"></p></div>
+            <div id="options-area" class="grid grid-cols-1 gap-4"></div>
+        </div>
+
+        <!-- Feedback Overlay -->
+        <div id="feedback-overlay" class="absolute inset-0 flex flex-col items-center justify-center hidden p-6 text-center rounded-2xl z-20">
+            <p id="feedback-text" class="text-4xl font-black mb-2"></p>
+            <p id="feedback-explanation" class="text-slate-100"></p>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="relative z-10 text-center">
+            <div class="w-20 h-20 mx-auto mb-4 text-orange-300">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
+            </div>
+            <h2 class="text-3xl font-bold mb-2">Landslide Warning!</h2>
+            <p class="text-lg text-orange-200 mb-6">The ground is unstable after heavy rains. Know the signs and act fast to get to safety.</p>
+            <button id="start-button" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-full w-full transition-transform transform hover:scale-105 shadow-lg">Evacuate to High Ground</button>
+        </div>
+
+        <!-- Game Over Screen -->
+         <div id="game-over-screen" class="relative z-10 text-center hidden">
+            <h2 id="game-over-title" class="text-4xl font-black mb-2">GAME OVER</h2>
+            <p id="game-over-message" class="text-lg text-orange-200 mb-4">You were caught in the slide!</p>
+            <p class="mb-6">Final Score: <span id="final-score" class="text-3xl font-bold">0</span></p>
+            <button id="restart-button" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105">Try Again</button>
+            <a href="index.html" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg inline-block mt-2">Back to Menu</a>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const el = {
+                gameContainer: document.getElementById('game-container'),
+                gameContent: document.getElementById('game-content'),
+                startScreen: document.getElementById('start-screen'),
+                gameOverScreen: document.getElementById('game-over-screen'),
+                questionText: document.getElementById('question-text'),
+                optionsArea: document.getElementById('options-area'),
+                score: document.getElementById('score'),
+                finalScore: document.getElementById('final-score'),
+                timerBar: document.getElementById('timer-bar'),
+                feedbackOverlay: document.getElementById('feedback-overlay'),
+                feedbackText: document.getElementById('feedback-text'),
+                feedbackExplanation: document.getElementById('feedback-explanation'),
+                startButton: document.getElementById('start-button'),
+                restartButton: document.getElementById('restart-button'),
+                progressText: document.getElementById('progress-text'),
+                questionImage: document.getElementById('question-image'),
+                dangerOverlay: document.getElementById('danger-overlay'),
+                landslideContainer: document.getElementById('landslide-container'),
+                landslideWall: document.getElementById('landslide-wall')
+            };
+
+            let score = 0, currentQuestionIndex = 0, timerWidth = 100, timerInterval, questions = [], acceptingAnswers = false;
+            const TIME_LIMIT = 15000, TIMER_DEPLETE_PER_TICK = 100 / (TIME_LIMIT / 100);
+            
+            const landslideQuestions = [
+                { question: "This is a common warning sign of a potential landslide. What is it?", options: ["Clear, sunny skies", "New cracks in the ground", "Birds singing loudly"], answer: 1, explanation: "New cracks in the ground, pavement, or foundations are a sign that the earth is shifting and unstable.", imageUrl: "image1.png" },
+                { question: "If you are caught in a landslide, what is the best survival position?", options: ["Lie flat on the ground", "Stand up tall to be seen", "Curl into a tight ball"], answer: 2, explanation: "Curling into a ball protects your vital organs and head from debris and impact.", imageUrl: "image2.png" },
+                { question: "You are driving and see this ahead. What should you do?", options: ["Try to drive through quickly", "Stop and get out of the car", "Turn around and drive away"], answer: 2, explanation: "Never try to outrun or drive through a landslide. The safest action is to move away from the path of the slide.", imageUrl: "image3.png" },
+                { question: "What is this document a key part of?", options: ["An evacuation plan", "A local map", "A construction blueprint"], answer: 0, explanation: "Knowing your evacuation routes and having a plan is the most critical preparation step for landslide-prone areas.", imageUrl: "image4.png" },
+                { question: "You hear a sudden rumbling sound from a hillside like this. You should:", options: ["Stay and watch to confirm", "Alert others and evacuate", "Take photos"], answer: 1, explanation: "Unusual sounds like rumbling or cracking are imminent danger signs. Evacuate immediately.", imageUrl: "image5.png" },
+                { question: "After a landslide, what is this a major risk of?", options: ["Extra stable ground", "Flooding from blocked rivers", "Finding valuable minerals"], answer: 1, explanation: "Landslides can block waterways, causing upstream flooding. The area also remains unstable.", imageUrl: "image6.png" }
+            ];
+            
+            function createDebris() {
+                for (let i = 0; i < 70; i++) {
+                    const debris = document.createElement('div');
+                    debris.className = 'debris';
+                    const size = 5 + Math.random() * 20;
+                    debris.style.width = `${size}px`;
+                    debris.style.height = `${size}px`;
+                    debris.style.left = `${Math.random() * 100}vw`;
+                    debris.style.animationDuration = `${3 + Math.random() * 4}s`;
+                    debris.style.animationDelay = `${Math.random() * 7}s`;
+                    debris.style.opacity = `${0.3 + Math.random() * 0.5}`;
+                    el.landslideContainer.appendChild(debris);
+                }
+            }
+
+            function startGame() {
+                score = 0; currentQuestionIndex = 0; el.score.textContent = score;
+                el.startScreen.classList.add('hidden');
+                el.gameOverScreen.classList.add('hidden');
+                el.gameContent.classList.remove('hidden');
+                
+                // Reset and start animation
+                el.landslideContainer.classList.remove('paused', 'fast-debris');
+                el.landslideWall.style.transition = '';
+                el.landslideWall.style.transform = '';
+                el.landslideWall.classList.remove('fast');
+                el.landslideWall.classList.add('active');
+
+                questions = shuffleArray([...landslideQuestions]);
+                displayNextQuestion();
+            }
+            
+            function displayNextQuestion() {
+                if (currentQuestionIndex >= questions.length) { winGame(); return; }
+                
+                // Resume animations for the new question
+                el.landslideContainer.classList.remove('paused', 'fast-debris');
+                el.landslideWall.style.transition = ''; // Let CSS class handle it
+                el.landslideWall.classList.remove('fast');
+
+                resetTimer();
+                const question = questions[currentQuestionIndex];
+                
+                el.questionImage.classList.add('opacity-0');
+                setTimeout(() => {
+                    el.questionImage.src = question.imageUrl;
+                    el.questionImage.onload = () => el.questionImage.classList.remove('opacity-0');
+                }, 250);
+
+                el.questionText.textContent = question.question;
+                el.questionText.classList.remove('fade-in'); void el.questionText.offsetWidth; el.questionText.classList.add('fade-in');
+                el.progressText.textContent = `Scenario ${currentQuestionIndex + 1} of ${questions.length}`;
+
+                el.optionsArea.innerHTML = '';
+                question.options.forEach((option, index) => {
+                    const button = document.createElement('button');
+                    button.innerHTML = `<span class="border border-slate-400 rounded-md w-8 h-8 mr-4 text-lg flex-shrink-0 flex items-center justify-center">${index + 1}</span><span class="text-left">${option}</span>`;
+                    button.className = 'option-btn w-full p-3 bg-white/10 rounded-lg text-left transition flex items-center';
+                    button.onclick = () => selectAnswer(index);
+                    el.optionsArea.appendChild(button);
+                });
+                
+                acceptingAnswers = true;
+                startTimer();
+            }
+
+            function selectAnswer(selectedIndex) {
+                if (!acceptingAnswers) return;
+                acceptingAnswers = false;
+                clearInterval(timerInterval);
+                const question = questions[currentQuestionIndex];
+                const correct = selectedIndex === question.answer;
+                
+                if (correct) {
+                    score += 10;
+                    el.score.textContent = score;
+                    timerWidth = Math.min(100, timerWidth + 20);
+                    el.timerBar.style.width = `${timerWidth}%`;
+                    
+                    // --- PAUSE ANIMATION ON CORRECT ---
+                    el.landslideContainer.classList.add('paused');
+                    const wallTransform = window.getComputedStyle(el.landslideWall).transform;
+                    el.landslideWall.style.transition = 'none'; // Stop transitions
+                    el.landslideWall.style.transform = wallTransform; // Freeze in place
+
+                    showFeedback(true);
+                } else {
+                    timerWidth = Math.max(0, timerWidth - 25);
+                    el.timerBar.style.width = `${timerWidth}%`;
+
+                    // --- ACCELERATE ANIMATION ON WRONG ---
+                    el.landslideContainer.classList.add('fast-debris');
+                    el.landslideWall.classList.add('fast');
+                    
+                    showFeedback(false, question.explanation);
+                    el.gameContainer.classList.add('shake-active');
+                    el.dangerOverlay.classList.remove('opacity-0');
+                    setTimeout(() => el.gameContainer.classList.remove('shake-active'), 500);
+                    setTimeout(() => el.dangerOverlay.classList.add('opacity-0'), 1000);
+                }
+
+                currentQuestionIndex++;
+                setTimeout(() => {
+                    el.feedbackOverlay.classList.add('hidden');
+                    if(timerWidth > 0) { displayNextQuestion(); } 
+                    else { endGame(); }
+                }, 2500);
+            }
+            
+            function showFeedback(isCorrect, explanation = "") {
+                el.feedbackText.textContent = isCorrect ? 'SAFE!' : 'DANGER!';
+                el.feedbackExplanation.textContent = isCorrect ? "You made the right choice!" : explanation;
+                el.feedbackOverlay.className = 'absolute inset-0 flex flex-col items-center justify-center p-6 text-center rounded-2xl z-20';
+                el.feedbackOverlay.classList.add(isCorrect ? 'feedback-safe' : 'feedback-danger');
+            }
+            
+            function startTimer() {
+                timerInterval = setInterval(() => {
+                    timerWidth -= TIMER_DEPLETE_PER_TICK;
+                    el.timerBar.style.width = `${timerWidth}%`;
+
+                    if (timerWidth < 50 && !el.landslideWall.classList.contains('fast')) {
+                         el.landslideWall.classList.add('fast');
+                    }
+                    if (timerWidth < 25) el.timerBar.classList.add('timer-low');
+                    if (timerWidth <= 0) endGame();
+                }, 100);
+            }
+
+            function resetTimer() {
+                clearInterval(timerInterval);
+                timerWidth = 100;
+                el.timerBar.style.width = '100%';
+                el.timerBar.classList.remove('timer-low');
+            }
+
+            function endGame(won = false) {
+                clearInterval(timerInterval);
+                acceptingAnswers = false;
+                el.gameContent.classList.add('hidden');
+                el.gameOverScreen.classList.remove('hidden');
+                document.getElementById('game-over-title').textContent = won ? "YOU ESCAPED!" : "GAME OVER";
+                document.getElementById('game-over-message').textContent = won ? "Great job! You navigated the danger zone successfully." : "You were caught in the slide!";
+                el.finalScore.textContent = score;
+                
+                // Stop and reset all animations
+                el.landslideContainer.classList.remove('paused', 'fast-debris');
+                el.landslideWall.classList.remove('active', 'fast');
+                el.landslideWall.style.transition = 'none';
+                el.landslideWall.style.transform = 'translateY(-150vh)';
+            }
+            const winGame = () => endGame(true);
+
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+
+            el.startButton.addEventListener('click', startGame);
+            el.restartButton.addEventListener('click', startGame);
+
+            window.addEventListener('keydown', e => {
+                if (acceptingAnswers) {
+                    if (e.key === '1') selectAnswer(0);
+                    if (e.key === '2') selectAnswer(1);
+                    if (e.key === '3') selectAnswer(2);
+                }
+            });
+            
+            createDebris();
+        });
+    </script>
+</body>
+</html>
+
