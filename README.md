@@ -178,12 +178,7 @@ const firebaseConfig = {
 
 ## 🎥 Demo Video
 
-> 📌 *Add your demo video link here, e.g.:*
-> [![Watch the demo](./screenshots/01-home-dashboard.png)](https://your-video-link-here)
->
-> Or embed a GIF/clip directly once uploaded to the repo.
 
----
 
 ## 🗺️ Roadmap
 
