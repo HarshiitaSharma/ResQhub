@@ -172,9 +172,13 @@ const firebaseConfig = {
 |---|---|
 | ![Emergency Contacts](./screenshots/05-emergency-contacts.png) | ![News Feed](./screenshots/06-news-feed.png) |
 
-| Earthquake Learning Module | Crisis Countdown — Gameplay |
+| Disaster Learning Module | Crisis Countdown — Gameplay |
 |---|---|
 | ![Earthquake Analysis](./screenshots/07-earthquake-analysis.png) | ![Crisis Countdown Gameplay](./screenshots/08-crisis-countdown-gameplay.png) |
+
+| Rescue Simulation | Fisrt Aid — Gameplay |
+|---|---|
+| ![Rescue Simulations](./screenshots/09-simulation.png) | ![First Aid](./screenshots/10-firstaid.png) |
 
 ## 🎥 Demo Video
 
