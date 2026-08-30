@@ -178,7 +178,7 @@ const firebaseConfig = {
 
 | Rescue Simulation | Fisrt Aid — Gameplay |
 |---|---|
-| ![Rescue Simulations](./screenshots/09-simulation.png) | ![First Aid](./screenshots/10-firstaid.png) |
+| ![Rescue Simulations](./screenshots/09-rescue-simulation.png) | ![First Aid](./screenshots/10-Firstaid.png) |
 
 ## 🎥 Demo Video
 
