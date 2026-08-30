@@ -179,7 +179,8 @@ const firebaseConfig = {
 | Rescue Simulation | Fisrt Aid — Gameplay |
 |---|---|
 | ![Rescue Simulations](./screenshots/09-rescue-simulation.png) | ![First Aid](./screenshots/10-Firstaid.png) |
-| ![Conveyor Belt Gameplays](./screenshots/11-Essentails.png) |
+| ![Conveyor Belt Gameplays](./screenshots/11-Essentails.png) | ![Profile & Score](./screenshots/Profile.png)
+
 
 ## 🎥 Demo Video
 
