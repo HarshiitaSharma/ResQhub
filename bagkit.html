@@ -93,12 +93,12 @@
             cursor: grab; font-weight: bold; user-select: none;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s;
-            animation: move-item 6s linear;
+            animation: move-item 11s linear;
         }
         @keyframes move-item { 0% { left: 100%; } 100% { left: -100px; } }
         .item .icon { font-size: 2rem; }
         .item .name { font-size: 0.65rem; }
-        .item:hover { transform: scale(1.1); box-shadow: 0 0 20px var(--primary-glow); }
+        .item:hover { transform: scale(1.1); box-shadow: 0 0 20px var(--primary-glow); animation-play-state: paused; }
         .item.dragging { opacity: 0.5; cursor: grabbing; animation-play-state: paused; }
 
         /* --- GO-BAG DROP ZONE --- */
